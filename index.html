@@ -56,6 +56,20 @@
     .btn-add:active { transform: scale(0.96); }
     .btn-add svg { width: 17px; height: 17px; }
     .btn-user { background: var(--tag-bg); border: 1.5px solid var(--border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--accent); font-weight: 700; font-size: 15px; }
+    .btn-pdf { background: var(--tag-bg); border: 1.5px solid var(--border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 17px; transition: transform 0.15s; }
+    .btn-pdf:active { transform: scale(0.92); }
+
+    /* PDF MODAL */
+    .pdf-recipe-item { background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+    .pdf-recipe-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .pdf-recipe-meta { font-size: 12px; color: var(--text3); margin-bottom: 10px; }
+    .pdf-check { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .pdf-check input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+    .btn-import-all { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 14px; padding: 15px; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+    .btn-import-all:disabled { opacity: 0.6; cursor: not-allowed; }
+    .pdf-progress { text-align: center; padding: 40px 20px; color: var(--text3); }
+    .pdf-progress .big { font-size: 48px; margin-bottom: 12px; }
+    .pdf-progress p { font-size: 14px; line-height: 1.6; }
 
     .search-area { padding: 14px 20px 6px; }
     .search-wrap { position: relative; }
@@ -192,6 +206,10 @@
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
           Ekle
         </button>
+        <button class="btn-pdf" onclick="document.getElementById('pdfInput').click()" title="PDF'ten tarif aktar">
+          📄
+        </button>
+        <input type="file" id="pdfInput" accept="application/pdf" style="display:none" onchange="handlePdfImport(event)" />
         <div class="btn-user" id="userAvatar" onclick="openProfile()">?</div>
       </div>
     </div>
@@ -321,6 +339,23 @@
       <div class="profile-avatar" id="profileAvatar">?</div>
       <div class="profile-email" id="profileEmail"></div>
       <button class="btn-logout" onclick="logout()">🚪 Çıkış Yap</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PDF AKTAR -->
+<div class="modal-overlay" id="pdfOverlay" onclick="handlePdfOverlay(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="pdfModalTitle">📄 PDF'ten Aktar</div>
+      <button class="btn-close" onclick="closePdfModal()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line stroke-linecap="round" x1="18" y1="6" x2="6" y2="18"/><line stroke-linecap="round" x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="form-body" id="pdfModalBody">
+      <div class="pdf-progress">
+        <div class="big">📄</div>
+        <p>PDF yükleniyor ve tarifler okunuyor...<br>Bu birkaç saniye sürebilir.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -620,6 +655,231 @@ function editFromDetail(){closeDetail();setTimeout(()=>openEditModal(detailId),2
 
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── PDF IMPORT ──
+let pdfRecipes = [];
+
+function closePdfModal() { document.getElementById('pdfOverlay').classList.remove('open'); }
+function handlePdfOverlay(e) { if(e.target===document.getElementById('pdfOverlay')) closePdfModal(); }
+
+async function handlePdfImport(event) {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+
+  document.getElementById('pdfModalTitle').textContent = '📄 PDF\'ten Aktar';
+  document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">⏳</div><p>PDF okunuyor ve tarifler ayıklanıyor...<br>Bu işlem birkaç saniye sürebilir.</p></div>`;
+  document.getElementById('pdfOverlay').classList.add('open');
+
+  try {
+    // PDF.js ile metni oku
+    const text = await extractPdfText(file);
+    if (!text || text.trim().length < 50) {
+      document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">😕</div><p>PDF'ten metin okunamadı.<br>Taranan (fotoğraf) PDF'ler desteklenmez,<br>metin tabanlı PDF olmalıdır.</p></div>`;
+      return;
+    }
+
+    // Metinden tarifleri parse et
+    pdfRecipes = parseRecipesFromText(text);
+
+    if (!pdfRecipes.length) {
+      document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">🤔</div><p>PDF'te tarif formatı tanınamadı.<br>Lütfen tariflerin başlıklarının belirgin olduğundan emin olun.</p></div>`;
+      return;
+    }
+
+    renderPdfRecipes();
+  } catch(err) {
+    document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">⚠️</div><p>Bir hata oluştu:<br>${esc(err.message)}</p></div>`;
+  }
+}
+
+async function extractPdfText(file) {
+  // PDF.js CDN'den yükle
+  if (!window.pdfjsLib) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = '';
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(item => item.str).join(' ');
+    fullText += pageText + '\n';
+  }
+
+  return fullText;
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function parseRecipesFromText(text) {
+  const results = [];
+  // Satırlara böl ve temizle
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+
+  // Tarif başlıklarını bul: büyük harf ağırlıklı, kısa (3-60 karakter), ardından malzeme/yapılış var
+  const titleKeywords = /malzeme|içindekiler|yapılış|hazırlanış|tarif|porsiyon|kişilik|dakika|saat/i;
+  const ignoreLine = /^\d+$|^sayfa|^page|\bwww\b|^http/i;
+
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    // Başlık adayı: 3-70 karakter, sadece rakam değil, url değil
+    const isTitle = line.length >= 3 && line.length <= 70 && !ignoreLine.test(line) &&
+      (
+        /^[A-ZÇĞİÖŞÜa-zçğışöüA-Z]/.test(line) && // harf ile başlıyor
+        lines.slice(i+1, i+6).some(l => titleKeywords.test(l)) // sonrasında tarif kelimeleri var
+      );
+
+    if (isTitle) {
+      // Bu bir tarif başlığı — sonraki satırları topla
+      const titleLine = line;
+      let j = i + 1;
+      let ingredients = [];
+      let steps = [];
+      let time_minutes = null;
+      let servings = null;
+      let inIngredients = false;
+      let inSteps = false;
+
+      while (j < lines.length) {
+        const l = lines[j];
+        // Yeni başlık geldi mi?
+        if (j > i+1 && l.length >= 3 && l.length <= 70 && !ignoreLine.test(l) &&
+          lines.slice(j+1, j+6).some(x => titleKeywords.test(x))) break;
+
+        // Süre bul
+        const timeMatch = l.match(/(\d+)\s*(dakika|dk|saat)/i);
+        if (timeMatch) {
+          time_minutes = parseInt(timeMatch[1]) * (timeMatch[2].toLowerCase().startsWith('saat') ? 60 : 1);
+        }
+        // Porsiyon bul
+        const servMatch = l.match(/(\d+)\s*(kişi|porsiyon|adet kişilik)/i);
+        if (servMatch) servings = parseInt(servMatch[1]);
+
+        // Malzeme / yapılış bölümleri
+        if (/malzeme|içindekiler/i.test(l)) { inIngredients = true; inSteps = false; j++; continue; }
+        if (/yapılış|hazırlanış|tarif|nasıl yapılır/i.test(l)) { inSteps = true; inIngredients = false; j++; continue; }
+
+        if (inIngredients && l.length > 2 && l.length < 80) ingredients.push(l);
+        if (inSteps && l.length > 5) steps.push(l);
+
+        j++;
+      }
+
+      if (ingredients.length > 0 || steps.length > 0) {
+        results.push({
+          name: titleLine,
+          category: guessCategory(titleLine + ' ' + ingredients.join(' ')),
+          emoji: guessEmoji(titleLine),
+          time_minutes,
+          servings,
+          ingredients,
+          steps: steps.join('\n'),
+          note: null,
+          is_favorite: false,
+        });
+      }
+      i = j;
+    } else {
+      i++;
+    }
+  }
+  return results;
+}
+
+function guessCategory(text) {
+  const t = text.toLowerCase();
+  if (/çorba/.test(t)) return 'Çorba';
+  if (/salata/.test(t)) return 'Salata';
+  if (/tatlı|pasta|kek|kurabiye|baklava|kadayıf|sütlaç|puding/.test(t)) return 'Tatlı';
+  if (/kahvaltı|omlet|yumurta|peynir|reçel|börek/.test(t)) return 'Sabah Kahvaltısı';
+  if (/çay|kahve|şerbet|limonata|smoothie|meyve suyu/.test(t)) return 'İçecek';
+  if (/pilav|kebap|köfte|dolma|sarma|güveç|etli|tavuk|balık|makarna/.test(t)) return 'Ana Yemek';
+  return 'Diğer';
+}
+
+function guessEmoji(name) {
+  const t = name.toLowerCase();
+  if (/çorba/.test(t)) return '🍜';
+  if (/pilav/.test(t)) return '🍚';
+  if (/köfte/.test(t)) return '🥩';
+  if (/kebap/.test(t)) return '🍢';
+  if (/salata/.test(t)) return '🥗';
+  if (/tatlı|pasta|kek/.test(t)) return '🍰';
+  if (/baklava/.test(t)) return '🍯';
+  if (/tavuk/.test(t)) return '🍗';
+  if (/balık/.test(t)) return '🐟';
+  if (/makarna/.test(t)) return '🍝';
+  if (/börek/.test(t)) return '🥐';
+  if (/kahve/.test(t)) return '☕';
+  if (/çay/.test(t)) return '🍵';
+  return '🍽';
+}
+
+function renderPdfRecipes() {
+  const body = document.getElementById('pdfModalBody');
+  document.getElementById('pdfModalTitle').textContent = `📄 ${pdfRecipes.length} Tarif Bulundu`;
+
+  body.innerHTML = `
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px;">Aktarmak istediğiniz tarifleri seçin:</p>
+    <div id="pdfRecipeList">
+      ${pdfRecipes.map((r, idx) => `
+        <div class="pdf-recipe-item">
+          <label class="pdf-check">
+            <input type="checkbox" id="pdfCheck_${idx}" checked />
+            <div>
+              <div class="pdf-recipe-title">${r.emoji} ${esc(r.name)}</div>
+              <div class="pdf-recipe-meta">
+                ${r.category} 
+                ${r.time_minutes ? ` · ⏱ ${r.time_minutes} dk` : ''}
+                ${r.servings ? ` · 👤 ${r.servings} kişi` : ''}
+                ${r.ingredients.length ? ` · ${r.ingredients.length} malzeme` : ''}
+              </div>
+            </div>
+          </label>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn-import-all" id="importBtn" onclick="importSelected()">
+      ✅ Seçilenleri Aktar
+    </button>
+  `;
+}
+
+async function importSelected() {
+  const btn = document.getElementById('importBtn');
+  const selected = pdfRecipes.filter((_, idx) => {
+    const cb = document.getElementById(`pdfCheck_${idx}`);
+    return cb && cb.checked;
+  });
+
+  if (!selected.length) { toast('⚠️ En az bir tarif seçin'); return; }
+
+  btn.disabled = true;
+  btn.textContent = `⏳ ${selected.length} tarif aktarılıyor...`;
+
+  let success = 0;
+  for (const r of selected) {
+    const payload = { ...r, user_id: currentUser.id };
+    const { data, error } = await sb.from('recipes').insert(payload).select().single();
+    if (!error && data) { recipes.unshift(data); success++; }
+  }
+
+  closePdfModal();
+  renderList();
+  toast(`✅ ${success} tarif başarıyla aktarıldı!`);
+}
 
 init();
 </script>
