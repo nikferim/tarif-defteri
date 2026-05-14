@@ -206,10 +206,10 @@
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
           Ekle
         </button>
-        <button class="btn-pdf" onclick="document.getElementById('pdfInput').click()" title="PDF'ten tarif aktar">
+        <button class="btn-pdf" onclick="document.getElementById('htmlInput').click()" title="Dosyadan tarif aktar">
           📄
         </button>
-        <input type="file" id="pdfInput" accept="application/pdf" style="display:none" onchange="handlePdfImport(event)" />
+        <input type="file" id="htmlInput" accept=".html,.htm,.docx,.pdf" style="display:none" onchange="handleFileImport(event)" />
         <div class="btn-user" id="userAvatar" onclick="openProfile()">?</div>
       </div>
     </div>
@@ -662,33 +662,37 @@ let pdfRecipes = [];
 function closePdfModal() { document.getElementById('pdfOverlay').classList.remove('open'); }
 function handlePdfOverlay(e) { if(e.target===document.getElementById('pdfOverlay')) closePdfModal(); }
 
-async function handlePdfImport(event) {
+async function handleFileImport(event) {
   const file = event.target.files[0];
   event.target.value = '';
   if (!file) return;
 
-  document.getElementById('pdfModalTitle').textContent = '📄 PDF\'ten Aktar';
-  document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">⏳</div><p>PDF okunuyor ve tarifler ayıklanıyor...<br>Bu işlem birkaç saniye sürebilir.</p></div>`;
+  document.getElementById('pdfModalTitle').textContent = '📄 Dosyadan Aktar';
+  document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">⏳</div><p>Dosya okunuyor ve tarifler ayıklanıyor...<br>Bu işlem birkaç saniye sürebilir.</p></div>`;
   document.getElementById('pdfOverlay').classList.add('open');
 
   try {
-    // PDF.js ile metni oku
-    const text = await extractPdfText(file);
-    if (!text || text.trim().length < 50) {
-      document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">😕</div><p>PDF'ten metin okunamadı.<br>Taranan (fotoğraf) PDF'ler desteklenmez,<br>metin tabanlı PDF olmalıdır.</p></div>`;
+    let text = '';
+    const name = file.name.toLowerCase();
+
+    if (name.endsWith('.html') || name.endsWith('.htm')) {
+      text = await extractHtmlText(file);
+    } else if (name.endsWith('.pdf')) {
+      text = await extractPdfText(file);
+    } else {
+      document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">😕</div><p>Desteklenmeyen dosya türü.<br>Lütfen .html veya .pdf dosyası seçin.</p></div>`;
       return;
     }
 
-    // DEBUG: Ham metni göster
-    document.getElementById('pdfModalBody').innerHTML = `
-      <p style="font-size:13px;color:var(--text2);margin-bottom:10px;">Ham metin (ilk 2000 karakter):</p>
-      <textarea style="width:100%;height:300px;font-size:11px;font-family:monospace;border:1px solid var(--border);border-radius:8px;padding:10px;" readonly>${text.substring(0,2000)}</textarea>
-      <p style="font-size:12px;color:var(--text3);margin-top:8px;">Bu metni kopyalayıp paylaşın.</p>
-    `;
-    return; // Parse etme, sadece metni göster
+    if (!text || text.trim().length < 30) {
+      document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">😕</div><p>Dosyadan metin okunamadı.</p></div>`;
+      return;
+    }
+
+    pdfRecipes = parseRecipesFromText(text);
 
     if (!pdfRecipes.length) {
-      document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">🤔</div><p>PDF'te tarif formatı tanınamadı.<br>Lütfen tariflerin başlıklarının belirgin olduğundan emin olun.</p></div>`;
+      document.getElementById('pdfModalBody').innerHTML = `<div class="pdf-progress"><div class="big">🤔</div><p>Tarif formatı tanınamadı.<br>Tariflerin "01) Tarif Adı" formatında olduğundan emin olun.</p></div>`;
       return;
     }
 
@@ -698,24 +702,33 @@ async function handlePdfImport(event) {
   }
 }
 
+async function extractHtmlText(file) {
+  const html = await file.text();
+  // HTML etiketlerini temizle, sadece metni al
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  // br ve p etiketlerini newline'a çevir
+  doc.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+  doc.querySelectorAll('p, div, h1, h2, h3, h4, li, tr').forEach(el => {
+    el.insertAdjacentText('afterend', '\n');
+  });
+  return doc.body ? doc.body.innerText || doc.body.textContent : doc.documentElement.textContent;
+}
+
 async function extractPdfText(file) {
-  // PDF.js CDN'den yükle
   if (!window.pdfjsLib) {
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
-
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   let fullText = '';
-
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
     const pageText = content.items.map(item => item.str).join(' ');
     fullText += pageText + '\n';
   }
-
   return fullText;
 }
 
@@ -727,54 +740,42 @@ function loadScript(src) {
   });
 }
 
-function parseRecipesFromText(text) {
+
+function parseRecipesFromText(rawText) {
   const results = [];
 
-  // Tüm metni birleştir (PDF bazen kelimeleri böler)
-  // Satırlara böl
-  const lines = text.split(/\n/).map(l => l.trim());
+  // Satırlara böl, temizle
+  const lines = rawText.split(/\n/).map(l => l.trim()).filter(Boolean);
 
-  // Tarif bloklarını ayır: "01) Tarif Adı" veya "1) Tarif Adı" veya "1. Tarif Adı" formatı
-  const titleRegex = /^\d+[\.\)]\s*(.+)/;
-
-  let blocks = []; // {title, lines[]}
+  // Tarifleri "01) Başlık" formatına göre gruplara böl
+  const titleRe = /^(\d{1,3})[\)\.]\s*(.+)/;
+  let blocks = [];
   let current = null;
 
   for (const line of lines) {
-    if (!line) continue;
-    const m = line.match(titleRegex);
+    const m = line.match(titleRe);
     if (m) {
       if (current) blocks.push(current);
-      current = { title: m[1].trim(), lines: [] };
+      current = { num: m[1], title: m[2].trim(), lines: [] };
     } else if (current) {
       current.lines.push(line);
     }
   }
   if (current) blocks.push(current);
 
-  // Eğer numaralı format bulunamazsa, MALZEMELER/YAPILIŞ'a göre bölmeyi dene
-  if (!blocks.length) {
-    const bigText = lines.join('\n');
-    const parts = bigText.split(/\n(?=MALZEME|İÇİNDEKİLER)/i);
-    parts.forEach((part, idx) => {
-      const partLines = part.split('\n').map(l => l.trim()).filter(Boolean);
-      if (partLines.length > 1) {
-        blocks.push({ title: partLines[0], lines: partLines.slice(1) });
-      }
-    });
-  }
-
   for (const block of blocks) {
     let ingredients = [];
     let stepsArr = [];
+    let noteArr = [];
     let time_minutes = null;
     let servings = null;
-    let mode = ''; // 'ing' veya 'steps'
+    let mode = '';
 
     for (const line of block.lines) {
-      // Bölüm başlıkları
-      if (/^MALZEME|^İÇİNDEKİLER/i.test(line)) { mode = 'ing'; continue; }
-      if (/^YAPILIŞ|^HAZIRLANIŞ|^HAZIRLAYI|^TARİF|^NASIL/i.test(line)) { mode = 'steps'; continue; }
+      // Bölüm başlıkları — "Malzemeler", "MALZEMELER", "malzemeler" hepsi
+      if (/^malzeme/i.test(line) || /^içindekiler/i.test(line)) { mode = 'ing'; continue; }
+      if (/^yapılı|^hazırlanı|^nasıl/i.test(line)) { mode = 'steps'; continue; }
+      if (/^not:/i.test(line)) { mode = 'note'; noteArr.push(line.replace(/^not:\s*/i, '').trim()); continue; }
 
       // Süre ve porsiyon
       const timeM = line.match(/(\d+)\s*(dakika|dk\.?|saat)/i);
@@ -783,28 +784,24 @@ function parseRecipesFromText(text) {
       if (servM) servings = parseInt(servM[1]);
 
       if (mode === 'ing') {
-        // Malzeme satırları: virgülle ayrılmış olabilir, böl
-        const ingLine = line.replace(/\.$/, '').trim();
-        if (ingLine.length > 1) {
-          // Uzun satırı virgülle böl
-          const parts = ingLine.split(',').map(s => s.trim()).filter(s => s.length > 1);
-          if (parts.length > 1) {
-            ingredients.push(...parts);
-          } else {
-            ingredients.push(ingLine);
-          }
-        }
+        // Virgülle ayrılmış malzemeleri böl
+        const parts = line.replace(/\.\s*$/, '').split(/,/).map(s => s.trim()).filter(s => s.length > 0);
+        ingredients.push(...parts);
       } else if (mode === 'steps') {
-        if (line.length > 3) stepsArr.push(line);
+        stepsArr.push(line);
+      } else if (mode === 'note') {
+        noteArr.push(line);
       }
     }
 
-    // Yapılışı cümlelere böl (nokta ile bitenleri)
-    let stepsText = stepsArr.join(' ');
-    // Cümlelere böl
-    const sentences = stepsText.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 5);
+    // Yapılış: tek uzun paragrafı cümlelere böl
+    const stepsRaw = stepsArr.join(' ').replace(/\s+/g, ' ');
+    const sentences = stepsRaw.split(/(?<=[.!?])\s+(?=[A-ZÇĞİÖŞÜİa-zçğışöü])/).map(s => s.trim()).filter(s => s.length > 3);
+    const stepsText = sentences.map((s, i) => `${i+1}. ${s.endsWith('.') ? s : s + '.'}`).join('\n');
 
-    if (ingredients.length > 0 || sentences.length > 0) {
+    const note = noteArr.join(' ').trim() || null;
+
+    if (block.title.length > 1 && (ingredients.length > 0 || stepsText.length > 0)) {
       results.push({
         name: block.title,
         category: guessCategory(block.title + ' ' + ingredients.join(' ')),
@@ -812,8 +809,8 @@ function parseRecipesFromText(text) {
         time_minutes,
         servings,
         ingredients,
-        steps: sentences.map((s, i) => `${i+1}. ${s}`).join('\n'),
-        note: null,
+        steps: stepsText,
+        note,
         is_favorite: false,
       });
     }
@@ -821,6 +818,7 @@ function parseRecipesFromText(text) {
 
   return results;
 }
+
 
 function guessCategory(text) {
   const t = text.toLowerCase();
