@@ -724,77 +724,96 @@ function loadScript(src) {
 
 function parseRecipesFromText(text) {
   const results = [];
-  // Satırlara böl ve temizle
-  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
 
-  // Tarif başlıklarını bul: büyük harf ağırlıklı, kısa (3-60 karakter), ardından malzeme/yapılış var
-  const titleKeywords = /malzeme|içindekiler|yapılış|hazırlanış|tarif|porsiyon|kişilik|dakika|saat/i;
-  const ignoreLine = /^\d+$|^sayfa|^page|\bwww\b|^http/i;
+  // Tüm metni birleştir (PDF bazen kelimeleri böler)
+  // Satırlara böl
+  const lines = text.split(/\n/).map(l => l.trim());
 
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    // Başlık adayı: 3-70 karakter, sadece rakam değil, url değil
-    const isTitle = line.length >= 3 && line.length <= 70 && !ignoreLine.test(line) &&
-      (
-        /^[A-ZÇĞİÖŞÜa-zçğışöüA-Z]/.test(line) && // harf ile başlıyor
-        lines.slice(i+1, i+6).some(l => titleKeywords.test(l)) // sonrasında tarif kelimeleri var
-      );
+  // Tarif bloklarını ayır: "01) Tarif Adı" veya "1) Tarif Adı" veya "1. Tarif Adı" formatı
+  const titleRegex = /^\d+[\.\)]\s*(.+)/;
 
-    if (isTitle) {
-      // Bu bir tarif başlığı — sonraki satırları topla
-      const titleLine = line;
-      let j = i + 1;
-      let ingredients = [];
-      let steps = [];
-      let time_minutes = null;
-      let servings = null;
-      let inIngredients = false;
-      let inSteps = false;
+  let blocks = []; // {title, lines[]}
+  let current = null;
 
-      while (j < lines.length) {
-        const l = lines[j];
-        // Yeni başlık geldi mi?
-        if (j > i+1 && l.length >= 3 && l.length <= 70 && !ignoreLine.test(l) &&
-          lines.slice(j+1, j+6).some(x => titleKeywords.test(x))) break;
-
-        // Süre bul
-        const timeMatch = l.match(/(\d+)\s*(dakika|dk|saat)/i);
-        if (timeMatch) {
-          time_minutes = parseInt(timeMatch[1]) * (timeMatch[2].toLowerCase().startsWith('saat') ? 60 : 1);
-        }
-        // Porsiyon bul
-        const servMatch = l.match(/(\d+)\s*(kişi|porsiyon|adet kişilik)/i);
-        if (servMatch) servings = parseInt(servMatch[1]);
-
-        // Malzeme / yapılış bölümleri
-        if (/malzeme|içindekiler/i.test(l)) { inIngredients = true; inSteps = false; j++; continue; }
-        if (/yapılış|hazırlanış|tarif|nasıl yapılır/i.test(l)) { inSteps = true; inIngredients = false; j++; continue; }
-
-        if (inIngredients && l.length > 2 && l.length < 80) ingredients.push(l);
-        if (inSteps && l.length > 5) steps.push(l);
-
-        j++;
-      }
-
-      if (ingredients.length > 0 || steps.length > 0) {
-        results.push({
-          name: titleLine,
-          category: guessCategory(titleLine + ' ' + ingredients.join(' ')),
-          emoji: guessEmoji(titleLine),
-          time_minutes,
-          servings,
-          ingredients,
-          steps: steps.join('\n'),
-          note: null,
-          is_favorite: false,
-        });
-      }
-      i = j;
-    } else {
-      i++;
+  for (const line of lines) {
+    if (!line) continue;
+    const m = line.match(titleRegex);
+    if (m) {
+      if (current) blocks.push(current);
+      current = { title: m[1].trim(), lines: [] };
+    } else if (current) {
+      current.lines.push(line);
     }
   }
+  if (current) blocks.push(current);
+
+  // Eğer numaralı format bulunamazsa, MALZEMELER/YAPILIŞ'a göre bölmeyi dene
+  if (!blocks.length) {
+    const bigText = lines.join('\n');
+    const parts = bigText.split(/\n(?=MALZEME|İÇİNDEKİLER)/i);
+    parts.forEach((part, idx) => {
+      const partLines = part.split('\n').map(l => l.trim()).filter(Boolean);
+      if (partLines.length > 1) {
+        blocks.push({ title: partLines[0], lines: partLines.slice(1) });
+      }
+    });
+  }
+
+  for (const block of blocks) {
+    let ingredients = [];
+    let stepsArr = [];
+    let time_minutes = null;
+    let servings = null;
+    let mode = ''; // 'ing' veya 'steps'
+
+    for (const line of block.lines) {
+      // Bölüm başlıkları
+      if (/^MALZEME|^İÇİNDEKİLER/i.test(line)) { mode = 'ing'; continue; }
+      if (/^YAPILIŞ|^HAZIRLANIŞ|^HAZIRLAYI|^TARİF|^NASIL/i.test(line)) { mode = 'steps'; continue; }
+
+      // Süre ve porsiyon
+      const timeM = line.match(/(\d+)\s*(dakika|dk\.?|saat)/i);
+      if (timeM) time_minutes = parseInt(timeM[1]) * (/saat/i.test(timeM[2]) ? 60 : 1);
+      const servM = line.match(/(\d+)\s*(kişi|porsiyon|kişilik)/i);
+      if (servM) servings = parseInt(servM[1]);
+
+      if (mode === 'ing') {
+        // Malzeme satırları: virgülle ayrılmış olabilir, böl
+        const ingLine = line.replace(/\.$/, '').trim();
+        if (ingLine.length > 1) {
+          // Uzun satırı virgülle böl
+          const parts = ingLine.split(',').map(s => s.trim()).filter(s => s.length > 1);
+          if (parts.length > 1) {
+            ingredients.push(...parts);
+          } else {
+            ingredients.push(ingLine);
+          }
+        }
+      } else if (mode === 'steps') {
+        if (line.length > 3) stepsArr.push(line);
+      }
+    }
+
+    // Yapılışı cümlelere böl (nokta ile bitenleri)
+    let stepsText = stepsArr.join(' ');
+    // Cümlelere böl
+    const sentences = stepsText.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 5);
+
+    if (ingredients.length > 0 || sentences.length > 0) {
+      results.push({
+        name: block.title,
+        category: guessCategory(block.title + ' ' + ingredients.join(' ')),
+        emoji: guessEmoji(block.title),
+        time_minutes,
+        servings,
+        ingredients,
+        steps: sentences.map((s, i) => `${i+1}. ${s}`).join('\n'),
+        note: null,
+        is_favorite: false,
+      });
+    }
+  }
+
   return results;
 }
 
