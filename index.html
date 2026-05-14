@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Tarif Defterim</title>
+  <meta name="description" content="Kişisel tarif defterim" />
+  <meta name="theme-color" content="#E85D26" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Tarif Defterim" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FDF8F3; --card: #FFFFFF; --text: #2A1A0E; --text2: #7A5C44;
+      --text3: #B89B85; --accent: #E85D26; --border: #EDE4D8;
+      --tag-bg: #FFF0E6; --tag-text: #C04A1B;
+      --green: #2D7A4F; --green-bg: #E6F5EC;
+      --radius: 16px; --shadow: 0 2px 16px rgba(232,93,38,0.08);
+    }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overscroll-behavior: none; }
+
+    #loadingScreen { position: fixed; inset: 0; z-index: 999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+    .loading-logo { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--accent); }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #authScreen { display: none; min-height: 100vh; align-items: center; justify-content: center; padding: 24px; }
+    .auth-card { background: var(--card); border-radius: 24px; border: 1.5px solid var(--border); padding: 32px 24px; width: 100%; max-width: 400px; }
+    .auth-logo { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--accent); text-align: center; margin-bottom: 4px; }
+    .auth-sub { text-align: center; color: var(--text3); font-size: 14px; margin-bottom: 28px; }
+    .auth-tabs { display: flex; margin-bottom: 24px; border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .auth-tab { flex: 1; padding: 11px; background: none; border: none; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; color: var(--text3); transition: all 0.2s; }
+    .auth-tab.active { background: var(--accent); color: #fff; }
+    .auth-form { display: flex; flex-direction: column; gap: 14px; }
+    .auth-input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg); font-size: 15px; color: var(--text); font-family: 'Nunito', sans-serif; outline: none; transition: border-color 0.2s; }
+    .auth-input:focus { border-color: var(--accent); }
+    .auth-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.15s; }
+    .auth-btn:active { transform: scale(0.98); }
+    .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .auth-error { background: #FEE; border: 1px solid #FCC; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #C00; display: none; }
+    .auth-success { background: var(--green-bg); border: 1px solid var(--green); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--green); display: none; text-align: center; }
+
+    .topbar { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1.5px solid var(--border); padding: 14px 20px 10px; display: flex; align-items: center; justify-content: space-between; }
+    .topbar-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+    .topbar-title span { color: var(--text); }
+    .topbar-right { display: flex; gap: 8px; align-items: center; }
+    .btn-add { background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 9px 16px; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: transform 0.15s; }
+    .btn-add:active { transform: scale(0.96); }
+    .btn-add svg { width: 17px; height: 17px; }
+    .btn-user { background: var(--tag-bg); border: 1.5px solid var(--border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--accent); font-weight: 700; font-size: 15px; }
+
+    .search-area { padding: 14px 20px 6px; }
+    .search-wrap { position: relative; }
+    .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text3); width: 18px; height: 18px; }
+    .search-input { width: 100%; padding: 12px 16px 12px 42px; border: 1.5px solid var(--border); border-radius: 50px; background: var(--card); font-size: 15px; color: var(--text); font-family: 'Nunito', sans-serif; outline: none; transition: border-color 0.2s; }
+    .search-input:focus { border-color: var(--accent); }
+    .cats { display: flex; gap: 8px; overflow-x: auto; padding: 10px 20px 4px; scrollbar-width: none; }
+    .cats::-webkit-scrollbar { display: none; }
+    .cat-btn { flex-shrink: 0; padding: 7px 16px; border-radius: 50px; border: 1.5px solid var(--border); background: var(--card); font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; white-space: nowrap; transition: all 0.15s; font-family: 'Nunito', sans-serif; }
+    .cat-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .recipe-list { padding: 10px 20px 100px; display: flex; flex-direction: column; gap: 14px; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+    .empty-state .big { font-size: 52px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; line-height: 1.6; }
+    .recipe-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); box-shadow: var(--shadow); overflow: hidden; cursor: pointer; transition: transform 0.15s; }
+    .recipe-card:active { transform: scale(0.985); }
+    .recipe-card-body { padding: 16px; }
+    .recipe-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .recipe-card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.3; flex: 1; }
+    .recipe-card-actions { display: flex; gap: 6px; margin-left: 10px; flex-shrink: 0; }
+    .icon-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; color: var(--text3); transition: color 0.15s; }
+    .icon-btn.fav.active { color: var(--accent); }
+    .icon-btn svg { width: 20px; height: 20px; display: block; }
+    .recipe-card-meta { display: flex; gap: 14px; margin-bottom: 10px; }
+    .meta-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text3); font-weight: 600; }
+    .meta-item svg { width: 14px; height: 14px; }
+    .recipe-card-desc { font-size: 13px; color: var(--text2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .recipe-tag { display: inline-block; margin-top: 10px; padding: 4px 12px; background: var(--tag-bg); color: var(--tag-text); border-radius: 50px; font-size: 12px; font-weight: 700; }
+
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1.5px solid var(--border); display: flex; padding: 8px 0 env(safe-area-inset-bottom, 8px); }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; cursor: pointer; padding: 6px; color: var(--text3); font-size: 11px; font-weight: 600; font-family: 'Nunito', sans-serif; transition: color 0.15s; }
+    .nav-btn.active { color: var(--accent); }
+    .nav-btn svg { width: 24px; height: 24px; }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(42,26,14,0.45); align-items: flex-end; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--card); border-radius: 24px 24px 0 0; width: 100%; max-height: 92vh; overflow-y: auto; padding: 0 0 env(safe-area-inset-bottom, 20px); animation: slideUp 0.28s ease; }
+    @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; border-bottom: 1.5px solid var(--border); }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--text); }
+    .btn-close { background: var(--border); border: none; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+    .btn-close svg { width: 18px; height: 18px; }
+
+    .form-body { padding: 20px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 700; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input, .form-select, .form-textarea { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg); font-size: 15px; color: var(--text); font-family: 'Nunito', sans-serif; outline: none; transition: border-color 0.2s; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+    .form-textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+    .ingredient-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+    .ingredient-item { display: flex; align-items: center; gap: 8px; }
+    .ingredient-item .form-input { flex: 1; }
+    .btn-remove { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px; flex-shrink: 0; }
+    .btn-remove svg { width: 20px; height: 20px; }
+    .btn-add-ing { background: none; border: 1.5px dashed var(--border); border-radius: 10px; padding: 10px; width: 100%; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 600; color: var(--text3); transition: border-color 0.2s, color 0.2s; }
+    .btn-save { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 14px; padding: 16px; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: transform 0.15s; }
+    .btn-save:active { transform: scale(0.98); }
+    .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .detail-hero { background: linear-gradient(135deg, #FFF0E6 0%, #FDE8D4 100%); padding: 30px 20px 24px; text-align: center; }
+    .detail-emoji { font-size: 64px; margin-bottom: 12px; }
+    .detail-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .detail-cat { display: inline-block; padding: 4px 14px; background: var(--tag-bg); color: var(--tag-text); border-radius: 50px; font-size: 13px; font-weight: 700; }
+    .detail-meta-row { display: flex; justify-content: center; gap: 24px; margin-top: 16px; }
+    .detail-meta-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .detail-meta-item svg { width: 20px; height: 20px; color: var(--accent); }
+    .detail-meta-item .val { font-size: 16px; font-weight: 700; color: var(--text); }
+    .detail-meta-item .lbl { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-body { padding: 20px; }
+    .section-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 14px; margin-top: 24px; display: flex; align-items: center; gap: 8px; }
+    .section-title:first-child { margin-top: 0; }
+    .section-title::after { content: ''; flex: 1; height: 1.5px; background: var(--border); }
+    .ing-chip { display: inline-flex; align-items: center; padding: 7px 14px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 50px; font-size: 14px; color: var(--text); margin: 0 6px 8px 0; }
+    .steps-list { list-style: none; }
+    .step-item { display: flex; gap: 14px; margin-bottom: 18px; align-items: flex-start; }
+    .step-num { flex-shrink: 0; width: 32px; height: 32px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+    .step-text { font-size: 15px; color: var(--text2); line-height: 1.6; padding-top: 4px; }
+    .detail-note { background: var(--green-bg); border-left: 3px solid var(--green); border-radius: 0 12px 12px 0; padding: 14px 16px; font-size: 14px; color: var(--green); line-height: 1.6; }
+
+    .stats-header { padding: 20px 20px 8px; }
+    .stats-title { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .stats-sub { font-size: 14px; color: var(--text3); }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px 20px; }
+    .stat-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 16px; text-align: center; }
+    .stat-num { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; color: var(--accent); }
+    .stat-lbl { font-size: 12px; color: var(--text3); font-weight: 600; margin-top: 4px; }
+
+    .profile-info { padding: 24px 20px; text-align: center; }
+    .profile-avatar { width: 64px; height: 64px; background: var(--tag-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: var(--accent); margin: 0 auto 12px; }
+    .profile-email { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+    .btn-logout { width: 100%; padding: 14px; background: none; border: 1.5px solid var(--border); border-radius: 12px; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 700; color: var(--text2); cursor: pointer; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #2A1A0E; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.3s; white-space: nowrap; z-index: 999; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div class="loading-logo">🍽 Tarif Defterim</div>
+  <div class="spinner"></div>
+</div>
+
+<div id="authScreen" style="display:none;">
+  <div class="auth-card">
+    <div class="auth-logo">🍽 Tarif Defterim</div>
+    <div class="auth-sub">Kişisel dijital tarif defteriniz</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Giriş Yap</button>
+      <button class="auth-tab" onclick="switchTab('register')">Kayıt Ol</button>
+    </div>
+    <div class="auth-form">
+      <div class="auth-error" id="authError"></div>
+      <div class="auth-success" id="authSuccess"></div>
+      <input class="auth-input" type="email" id="authEmail" placeholder="E-posta adresiniz" autocomplete="email" />
+      <input class="auth-input" type="password" id="authPassword" placeholder="Şifreniz (en az 6 karakter)" autocomplete="current-password" />
+      <button class="auth-btn" id="authBtn" onclick="handleAuth()">Giriş Yap</button>
+    </div>
+  </div>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="screen active" id="screen-home">
+    <div class="topbar">
+      <div class="topbar-title">Tarif <span>Defterim</span></div>
+      <div class="topbar-right">
+        <button class="btn-add" onclick="openAddModal()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          Ekle
+        </button>
+        <div class="btn-user" id="userAvatar" onclick="openProfile()">?</div>
+      </div>
+    </div>
+    <div class="search-area">
+      <div class="search-wrap">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="m21 21-4.35-4.35"/></svg>
+        <input type="search" class="search-input" placeholder="Tarif veya malzeme ara..." id="searchInput" oninput="renderList()" />
+      </div>
+    </div>
+    <div class="cats">
+      <button class="cat-btn active" onclick="setCat(this,'')">Tümü</button>
+      <button class="cat-btn" onclick="setCat(this,'Sabah Kahvaltısı')">🍳 Kahvaltı</button>
+      <button class="cat-btn" onclick="setCat(this,'Çorba')">🍜 Çorba</button>
+      <button class="cat-btn" onclick="setCat(this,'Ana Yemek')">🍽 Ana Yemek</button>
+      <button class="cat-btn" onclick="setCat(this,'Salata')">🥗 Salata</button>
+      <button class="cat-btn" onclick="setCat(this,'Tatlı')">🍰 Tatlı</button>
+      <button class="cat-btn" onclick="setCat(this,'İçecek')">🧃 İçecek</button>
+      <button class="cat-btn" onclick="setCat(this,'Diğer')">🍴 Diğer</button>
+    </div>
+    <div class="recipe-list" id="recipeList">
+      <div class="empty-state"><div class="big">⏳</div><p>Tarifler yükleniyor...</p></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-favs">
+    <div class="topbar"><div class="topbar-title">❤️ <span>Favorilerim</span></div></div>
+    <div class="recipe-list" id="favList"></div>
+  </div>
+
+  <div class="screen" id="screen-stats">
+    <div class="topbar"><div class="topbar-title">📊 <span>İstatistikler</span></div></div>
+    <div class="stats-header">
+      <div class="stats-title">Tarif Defterim</div>
+      <div class="stats-sub" id="statsDate"></div>
+    </div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div style="padding:0 20px 8px;"><div class="section-title">Kategorilere Göre</div></div>
+    <div class="recipe-list" style="padding-top:0" id="statsCats"></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="showScreen('home')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline stroke-linecap="round" stroke-linejoin="round" points="9 22 9 12 15 12 15 22"/></svg>
+      Ana Sayfa
+    </button>
+    <button class="nav-btn" id="nav-favs" onclick="showScreen('favs')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Favoriler
+    </button>
+    <button class="nav-btn" id="nav-stats" onclick="showScreen('stats')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line stroke-linecap="round" x1="18" y1="20" x2="18" y2="10"/><line stroke-linecap="round" x1="12" y1="20" x2="12" y2="4"/><line stroke-linecap="round" x1="6" y1="20" x2="6" y2="14"/></svg>
+      İstatistik
+    </button>
+  </nav>
+</div>
+
+<!-- MODAL: EKLE/DÜZENLE -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Yeni Tarif</div>
+      <button class="btn-close" onclick="closeModal()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line stroke-linecap="round" x1="18" y1="6" x2="6" y2="18"/><line stroke-linecap="round" x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="form-body">
+      <div class="form-group"><label>Tarif Adı *</label><input class="form-input" id="fName" placeholder="örn. Mercimek Çorbası" /></div>
+      <div class="form-row">
+        <div class="form-group"><label>Kategori</label>
+          <select class="form-select" id="fCat">
+            <option value="Diğer">Diğer</option>
+            <option value="Sabah Kahvaltısı">Kahvaltı</option>
+            <option value="Çorba">Çorba</option>
+            <option value="Ana Yemek">Ana Yemek</option>
+            <option value="Salata">Salata</option>
+            <option value="Tatlı">Tatlı</option>
+            <option value="İçecek">İçecek</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Emoji</label><input class="form-input" id="fEmoji" placeholder="🍲" style="font-size:22px;text-align:center;" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>⏱ Süre (dk)</label><input class="form-input" id="fTime" type="number" placeholder="30" min="1" /></div>
+        <div class="form-group"><label>👤 Kişi</label><input class="form-input" id="fServ" type="number" placeholder="4" min="1" /></div>
+      </div>
+      <div class="form-group">
+        <label>Malzemeler</label>
+        <div class="ingredient-list" id="ingList"></div>
+        <button class="btn-add-ing" onclick="addIngField('')">+ Malzeme Ekle</button>
+      </div>
+      <div class="form-group"><label>Yapılışı (her satır bir adım)</label><textarea class="form-textarea" id="fSteps" rows="5" placeholder="1. Soğanları doğrayın.&#10;2. Yağda kavurun."></textarea></div>
+      <div class="form-group"><label>Not / İpucu</label><textarea class="form-textarea" id="fNote" rows="2" placeholder="İpuçları, varyasyonlar..."></textarea></div>
+      <input type="hidden" id="fId" />
+      <button class="btn-save" id="saveBtn" onclick="saveRecipe()">💾 Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETAY -->
+<div class="modal-overlay" id="detailOverlay" onclick="handleDetailOverlay(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="icon-btn fav" id="detailFavBtn" onclick="toggleFavDetail()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <button class="icon-btn" onclick="editFromDetail()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        </button>
+        <button class="btn-close" onclick="closeDetail()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line stroke-linecap="round" x1="18" y1="6" x2="6" y2="18"/><line stroke-linecap="round" x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- MODAL: PROFİL -->
+<div class="modal-overlay" id="profileOverlay" onclick="handleProfileOverlay(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Profilim</div>
+      <button class="btn-close" onclick="closeProfile()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line stroke-linecap="round" x1="18" y1="6" x2="6" y2="18"/><line stroke-linecap="round" x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="profile-info">
+      <div class="profile-avatar" id="profileAvatar">?</div>
+      <div class="profile-email" id="profileEmail"></div>
+      <button class="btn-logout" onclick="logout()">🚪 Çıkış Yap</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const { createClient } = supabase;
+const sb = createClient(
+  'https://doaeylatedhpnwqqtvpb.supabase.co',
+  'sb_publishable_tRsM1gq-b2Pfa9Rh9uXpoA_G2U1BNFJ'
+);
+
+const catEmoji = {'Sabah Kahvaltısı':'🍳','Çorba':'🍜','Ana Yemek':'🍽','Salata':'🥗','Tatlı':'🍰','İçecek':'🧃','Diğer':'🍴'};
+let recipes = [], currentCat = '', editingId = null, detailId = null, currentUser = null, authMode = 'login';
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  currentUser = session?.user || null;
+  if (currentUser) { showApp(); await fetchRecipes(); }
+  else showAuth();
+});
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  currentUser = session?.user || null;
+  document.getElementById('loadingScreen').style.display = 'none';
+  if (currentUser) { showApp(); await fetchRecipes(); }
+  else showAuth();
+}
+
+function showApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'block';
+  if (currentUser) {
+    const l = (currentUser.email||'?')[0].toUpperCase();
+    document.getElementById('userAvatar').textContent = l;
+    document.getElementById('profileAvatar').textContent = l;
+    document.getElementById('profileEmail').textContent = currentUser.email;
+  }
+}
+function showAuth() {
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
+}
+
+function switchTab(mode) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&mode==='login')||(i===1&&mode==='register')));
+  document.getElementById('authBtn').textContent = mode==='login' ? 'Giriş Yap' : 'Kayıt Ol';
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
+}
+
+async function handleAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const btn = document.getElementById('authBtn');
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
+  if (!email||!password) { showAuthError('E-posta ve şifre gereklidir.'); return; }
+  if (password.length<6) { showAuthError('Şifre en az 6 karakter olmalıdır.'); return; }
+  btn.disabled = true; btn.textContent = '⏳ Lütfen bekleyin...';
+  if (authMode==='login') {
+    const {error} = await sb.auth.signInWithPassword({email,password});
+    if (error) { showAuthError(trErr(error.message)); btn.disabled=false; btn.textContent='Giriş Yap'; }
+  } else {
+    const {error} = await sb.auth.signUp({email,password});
+    if (error) { showAuthError(trErr(error.message)); btn.disabled=false; btn.textContent='Kayıt Ol'; }
+    else {
+      document.getElementById('authSuccess').textContent = '✅ Kayıt başarılı! E-postanıza onay linki gönderdik.';
+      document.getElementById('authSuccess').style.display = 'block';
+      btn.disabled=false; btn.textContent='Kayıt Ol';
+    }
+  }
+}
+function showAuthError(m) { const e=document.getElementById('authError'); e.textContent=m; e.style.display='block'; }
+function trErr(m) {
+  if (m.includes('Invalid login')) return 'E-posta veya şifre hatalı.';
+  if (m.includes('Email not confirmed')) return 'E-postanızı henüz onaylamadınız.';
+  if (m.includes('already registered')) return 'Bu e-posta zaten kayıtlı.';
+  return m;
+}
+async function logout() { await sb.auth.signOut(); recipes=[]; closeProfile(); toast('👋 Çıkış yapıldı'); }
+function openProfile() { document.getElementById('profileOverlay').classList.add('open'); }
+function closeProfile() { document.getElementById('profileOverlay').classList.remove('open'); }
+function handleProfileOverlay(e) { if(e.target===document.getElementById('profileOverlay')) closeProfile(); }
+
+async function fetchRecipes() {
+  if (!currentUser) return;
+  const {data,error} = await sb.from('recipes').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  if (error) { toast('⚠️ Veriler yüklenemedi'); return; }
+  recipes = data||[];
+  renderList();
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if(name==='favs') renderFavs();
+  if(name==='stats') renderStats();
+}
+
+function cardHTML(r) {
+  return `<div class="recipe-card" onclick="openDetail('${r.id}')">
+    <div class="recipe-card-body">
+      <div class="recipe-card-header">
+        <div class="recipe-card-title">${r.emoji||catEmoji[r.category]||'🍴'} ${esc(r.name)}</div>
+        <div class="recipe-card-actions">
+          <button class="icon-btn fav ${r.is_favorite?'active':''}" onclick="toggleFav(event,'${r.id}')">
+            <svg fill="${r.is_favorite?'currentColor':'none'}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <button class="icon-btn" onclick="deleteRecipe(event,'${r.id}')">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline stroke-linecap="round" stroke-linejoin="round" points="3 6 5 6 21 6"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="recipe-card-meta">
+        ${r.time_minutes?`<div class="meta-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline stroke-linecap="round" points="12 6 12 12 16 14"/></svg>${r.time_minutes} dk</div>`:''}
+        ${r.servings?`<div class="meta-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${r.servings} kişi</div>`:''}
+        ${r.ingredients&&r.ingredients.length?`<div class="meta-item">${r.ingredients.length} malzeme</div>`:''}
+      </div>
+      ${r.steps?`<div class="recipe-card-desc">${esc(r.steps.split('\n').filter(Boolean)[0]||'')}</div>`:''}
+      <span class="recipe-tag">${esc(r.category)}</span>
+    </div>
+  </div>`;
+}
+
+function renderList() {
+  const q=(document.getElementById('searchInput')?.value||'').trim().toLowerCase();
+  const list=document.getElementById('recipeList');
+  let items=recipes.filter(r=>(!currentCat||r.category===currentCat)&&(!q||r.name.toLowerCase().includes(q)||(r.ingredients||[]).some(i=>i.toLowerCase().includes(q))));
+  if(!items.length){list.innerHTML=`<div class="empty-state"><div class="big">🍳</div><p>${q||currentCat?'Arama sonucu bulunamadı.':'Henüz tarif yok.<br>İlk tarifinizi ekleyin!'}</p></div>`;return;}
+  list.innerHTML=items.map(r=>cardHTML(r)).join('');
+}
+
+function renderFavs() {
+  const list=document.getElementById('favList');
+  const favs=recipes.filter(r=>r.is_favorite);
+  if(!favs.length){list.innerHTML=`<div class="empty-state"><div class="big">❤️</div><p>Henüz favori tarif yok.</p></div>`;return;}
+  list.innerHTML=favs.map(r=>cardHTML(r)).join('');
+}
+
+function renderStats() {
+  document.getElementById('statsDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  const favCount=recipes.filter(r=>r.is_favorite).length;
+  const cats={};
+  recipes.forEach(r=>{cats[r.category]=(cats[r.category]||0)+1;});
+  const topCat=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${recipes.length}</div><div class="stat-lbl">Toplam Tarif</div></div>
+    <div class="stat-card"><div class="stat-num">${favCount}</div><div class="stat-lbl">Favori Tarif</div></div>
+    <div class="stat-card"><div class="stat-num">${Object.keys(cats).length}</div><div class="stat-lbl">Kategori</div></div>
+    <div class="stat-card"><div class="stat-num">${topCat?topCat[1]:0}</div><div class="stat-lbl">${topCat?esc(topCat[0]):'—'}</div></div>`;
+  const catEl=document.getElementById('statsCats');
+  if(!Object.keys(cats).length){catEl.innerHTML='<div class="empty-state"><p>Henüz tarif eklenmedi.</p></div>';return;}
+  catEl.innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,count])=>`
+    <div style="display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--border);">
+      <span style="font-size:28px;">${catEmoji[cat]||'🍴'}</span>
+      <div style="flex:1"><div style="font-weight:600;font-size:15px;">${esc(cat)}</div>
+        <div style="height:6px;background:var(--border);border-radius:3px;margin-top:6px;">
+          <div style="height:100%;width:${Math.round(count/recipes.length*100)}%;background:var(--accent);border-radius:3px;"></div>
+        </div>
+      </div>
+      <span style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--accent);">${count}</span>
+    </div>`).join('');
+}
+
+function setCat(btn,cat){currentCat=cat;document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderList();}
+
+async function toggleFav(e,id){
+  e.stopPropagation();
+  const r=recipes.find(r=>r.id===id); if(!r) return;
+  const v=!r.is_favorite;
+  const {error}=await sb.from('recipes').update({is_favorite:v}).eq('id',id);
+  if(error){toast('⚠️ Hata');return;}
+  r.is_favorite=v; renderList(); toast(v?'❤️ Favorilere eklendi':'💔 Favorilerden çıkarıldı');
+}
+
+async function toggleFavDetail(){
+  const r=recipes.find(r=>r.id===detailId); if(!r) return;
+  const v=!r.is_favorite;
+  const {error}=await sb.from('recipes').update({is_favorite:v}).eq('id',detailId);
+  if(error){toast('⚠️ Hata');return;}
+  r.is_favorite=v; updateDetailFavBtn(v); renderList(); toast(v?'❤️ Favorilere eklendi':'💔 Favorilerden çıkarıldı');
+}
+
+function updateDetailFavBtn(fav){
+  const btn=document.getElementById('detailFavBtn');
+  btn.classList.toggle('active',fav);
+  btn.querySelector('svg').setAttribute('fill',fav?'currentColor':'none');
+}
+
+async function deleteRecipe(e,id){
+  e.stopPropagation();
+  if(!confirm('Bu tarifi silmek istediğinizden emin misiniz?')) return;
+  const {error}=await sb.from('recipes').delete().eq('id',id);
+  if(error){toast('⚠️ Silinemedi');return;}
+  recipes=recipes.filter(r=>r.id!==id); renderList(); toast('🗑 Tarif silindi');
+}
+
+function openAddModal(){
+  editingId=null;
+  document.getElementById('modalTitle').textContent='Yeni Tarif';
+  ['fId','fName','fEmoji','fTime','fServ','fSteps','fNote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fCat').value='Diğer';
+  document.getElementById('ingList').innerHTML='';
+  addIngField(''); addIngField('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openEditModal(id){
+  const r=recipes.find(r=>r.id===id); if(!r) return;
+  editingId=id;
+  document.getElementById('modalTitle').textContent='Tarifi Düzenle';
+  document.getElementById('fId').value=r.id;
+  document.getElementById('fName').value=r.name;
+  document.getElementById('fCat').value=r.category;
+  document.getElementById('fEmoji').value=r.emoji||'';
+  document.getElementById('fTime').value=r.time_minutes||'';
+  document.getElementById('fServ').value=r.servings||'';
+  document.getElementById('fSteps').value=r.steps||'';
+  document.getElementById('fNote').value=r.note||'';
+  document.getElementById('ingList').innerHTML='';
+  (r.ingredients||[]).forEach(i=>addIngField(i));
+  if(!(r.ingredients&&r.ingredients.length)) addIngField('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+function handleOverlayClick(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
+
+function addIngField(val){
+  const div=document.createElement('div');
+  div.className='ingredient-item';
+  div.innerHTML=`<input class="form-input" placeholder="örn. 2 su bardağı un" value="${esc(val)}" />
+    <button class="btn-remove" onclick="this.parentNode.remove()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line stroke-linecap="round" x1="8" y1="12" x2="16" y2="12"/></svg></button>`;
+  document.getElementById('ingList').appendChild(div);
+}
+
+async function saveRecipe(){
+  const name=document.getElementById('fName').value.trim();
+  if(!name){toast('⚠️ Tarif adı gereklidir!');return;}
+  const ings=Array.from(document.querySelectorAll('#ingList .form-input')).map(i=>i.value.trim()).filter(Boolean);
+  const btn=document.getElementById('saveBtn');
+  btn.disabled=true; btn.textContent='⏳ Kaydediliyor...';
+  const payload={
+    name, category:document.getElementById('fCat').value,
+    emoji:document.getElementById('fEmoji').value.trim()||null,
+    time_minutes:parseInt(document.getElementById('fTime').value)||null,
+    servings:parseInt(document.getElementById('fServ').value)||null,
+    ingredients:ings,
+    steps:document.getElementById('fSteps').value.trim()||null,
+    note:document.getElementById('fNote').value.trim()||null,
+  };
+  let error;
+  if(editingId){
+    ({error}=await sb.from('recipes').update(payload).eq('id',editingId));
+    if(!error){const idx=recipes.findIndex(r=>r.id===editingId);if(idx>-1)recipes[idx]={...recipes[idx],...payload};}
+  } else {
+    payload.user_id=currentUser.id; payload.is_favorite=false;
+    const {data,error:e}=await sb.from('recipes').insert(payload).select().single();
+    error=e; if(!error&&data) recipes.unshift(data);
+  }
+  btn.disabled=false; btn.textContent='💾 Kaydet';
+  if(error){toast('⚠️ Kaydedilemedi: '+error.message);return;}
+  closeModal(); renderList(); toast(editingId?'✅ Tarif güncellendi!':'✅ Tarif eklendi!');
+}
+
+function openDetail(id){
+  const r=recipes.find(r=>r.id===id); if(!r) return;
+  detailId=id; updateDetailFavBtn(r.is_favorite);
+  const steps=(r.steps||'').split('\n').filter(Boolean);
+  document.getElementById('detailContent').innerHTML=`
+    <div class="detail-hero">
+      <div class="detail-emoji">${r.emoji||catEmoji[r.category]||'🍴'}</div>
+      <div class="detail-title">${esc(r.name)}</div>
+      <span class="detail-cat">${esc(r.category)}</span>
+      <div class="detail-meta-row">
+        ${r.time_minutes?`<div class="detail-meta-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline stroke-linecap="round" points="12 6 12 12 16 14"/></svg><span class="val">${r.time_minutes} dk</span><span class="lbl">Süre</span></div>`:''}
+        ${r.servings?`<div class="detail-meta-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span class="val">${r.servings} kişi</span><span class="lbl">Porsiyon</span></div>`:''}
+        ${r.ingredients&&r.ingredients.length?`<div class="detail-meta-item"><span class="val">${r.ingredients.length}</span><span class="lbl">Malzeme</span></div>`:''}
+      </div>
+    </div>
+    <div class="detail-body">
+      ${r.ingredients&&r.ingredients.length?`<div class="section-title">Malzemeler</div><div>${r.ingredients.map(i=>`<span class="ing-chip">✓ ${esc(i)}</span>`).join('')}</div>`:''}
+      ${steps.length?`<div class="section-title">Yapılışı</div><ol class="steps-list">${steps.map((s,i)=>`<li class="step-item"><div class="step-num">${i+1}</div><div class="step-text">${esc(s.replace(/^\d+[\.\)]\s*/,''))}</div></li>`).join('')}</ol>`:''}
+      ${r.note?`<div class="section-title">İpucu</div><div class="detail-note">💡 ${esc(r.note)}</div>`:''}
+    </div><div style="height:24px;"></div>`;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail(){document.getElementById('detailOverlay').classList.remove('open');}
+function handleDetailOverlay(e){if(e.target===document.getElementById('detailOverlay'))closeDetail();}
+function editFromDetail(){closeDetail();setTimeout(()=>openEditModal(detailId),200);}
+
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+init();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
