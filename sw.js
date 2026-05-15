@@ -1,8 +1,5 @@
-// v3 - cache yok, her zaman network
-const VERSION = 'v3';
-
+// Service Worker tamamen devre dışı - kendini siliyor
 self.addEventListener('install', () => self.skipWaiting());
-
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -10,8 +7,4 @@ self.addEventListener('activate', e => {
       .then(() => self.clients.claim())
   );
 });
-
-self.addEventListener('fetch', e => {
-  // Cache kullanma, her zaman network'ten getir
-  e.respondWith(fetch(e.request));
-});
+// fetch handler yok - SW hiçbir şeye müdahale etmiyor
