@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -482,10 +482,21 @@ sb.auth.onAuthStateChange(async (ev, session) => {
 });
 
 async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  currentUser = session?.user || null;
-  document.getElementById('loadingScreen').style.display = 'none';
-  if (currentUser) { showApp(); await fetchRecipes(); } else showAuth();
+  const timeout = setTimeout(() => {
+    document.getElementById('loadingScreen').style.display = 'none';
+    showAuth();
+  }, 5000);
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    clearTimeout(timeout);
+    currentUser = session?.user || null;
+    document.getElementById('loadingScreen').style.display = 'none';
+    if (currentUser) { showApp(); await fetchRecipes(); } else showAuth();
+  } catch(e) {
+    clearTimeout(timeout);
+    document.getElementById('loadingScreen').style.display = 'none';
+    showAuth();
+  }
 }
 
 function showApp() {
