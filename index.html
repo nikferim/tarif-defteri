@@ -549,8 +549,19 @@ async function handleAuth() {
   if(pass.length<6){showAuthErr('Şifre en az 6 karakter olmalıdır.');return;}
   btn.disabled=true; btn.textContent='⏳ Bekleyin...';
   if(authMode==='login'){
-    const {error}=await sb.auth.signInWithPassword({email,password:pass});
+    const {data, error}=await sb.auth.signInWithPassword({email,password:pass});
     if(error){showAuthErr(trErr(error.message));btn.disabled=false;btn.textContent='Giriş Yap';}
+    else {
+      // SDK yavaş olsa bile localStorage'dan okuyarak direkt gir
+      currentUser = data?.user || null;
+      if(!currentUser){
+        // Kısa bekle, localStorage'a yazılsın
+        await new Promise(r=>setTimeout(r,500));
+        try{const raw=localStorage.getItem('sb-doaeylatedhpnwqqtvpb-auth-token');if(raw)currentUser=JSON.parse(raw)?.user;}catch(e){}
+      }
+      btn.disabled=false; btn.textContent='Giriş Yap';
+      if(currentUser){showApp();await fetchRecipes();}
+    }
   } else {
     const {error}=await sb.auth.signUp({email,password:pass});
     if(error){showAuthErr(trErr(error.message));btn.disabled=false;btn.textContent='Kayıt Ol';}
