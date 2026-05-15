@@ -476,12 +476,25 @@ let formTags=[], importList=[], searchTimer=null;
 let shopItems = JSON.parse(localStorage.getItem('shopItems')||'[]');
 
 // ── INIT ──
-sb.auth.onAuthStateChange(async (ev, session) => {
-  currentUser = session?.user || null;
-  if (currentUser) { showApp(); await fetchRecipes(); } else showAuth();
-});
-
 async function init() {
+  // Önce localStorage'dan session oku (hızlı)
+  try {
+    const raw = localStorage.getItem('sb-doaeylatedhpnwqqtvpb-auth-token');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.user) {
+        currentUser = parsed.user;
+        document.getElementById('loadingScreen').style.display = 'none';
+        showApp();
+        await fetchRecipes();
+        // Arka planda SDK session'ı da yenile
+        sb.auth.getSession().catch(()=>{});
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // localStorage'da yoksa SDK'dan dene
   const timeout = setTimeout(() => {
     document.getElementById('loadingScreen').style.display = 'none';
     showAuth();
@@ -498,6 +511,11 @@ async function init() {
     showAuth();
   }
 }
+
+sb.auth.onAuthStateChange(async (ev, session) => {
+  if (ev === 'SIGNED_OUT') { currentUser = null; recipes = []; showAuth(); }
+  else if (ev === 'SIGNED_IN' && session?.user) { currentUser = session.user; }
+});
 
 function showApp() {
   document.getElementById('authScreen').style.display = 'none';
