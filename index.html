@@ -564,7 +564,16 @@ function trErr(m){
   if(m.includes('already registered'))return'Bu e-posta zaten kayıtlı.';
   return m;
 }
-async function logout(){await sb.auth.signOut();recipes=[];closeProfile();toast('👋 Çıkış yapıldı');}
+async function logout(){
+  await sb.auth.signOut();
+  // localStorage'daki session'ı da temizle
+  localStorage.removeItem('sb-doaeylatedhpnwqqtvpb-auth-token');
+  currentUser = null;
+  recipes = [];
+  closeProfile();
+  showAuth();
+  toast('👋 Çıkış yapıldı');
+}
 function openProfile(){document.getElementById('profileOverlay').classList.add('open');}
 function closeProfile(){document.getElementById('profileOverlay').classList.remove('open');}
 function handleProfileOverlay(e){if(e.target===document.getElementById('profileOverlay'))closeProfile();}
