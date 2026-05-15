@@ -262,13 +262,21 @@
     </div>
     <div class="cats" id="catBar">
       <button class="cat-btn active" onclick="setCat(this,'')">Tümü <span class="cat-count" id="cnt-all">0</span></button>
-      <button class="cat-btn" onclick="setCat(this,'Sabah Kahvaltısı')">🍳 Kahvaltı <span class="cat-count" id="cnt-k">0</span></button>
-      <button class="cat-btn" onclick="setCat(this,'Çorba')">🍜 Çorba <span class="cat-count" id="cnt-c">0</span></button>
-      <button class="cat-btn" onclick="setCat(this,'Ana Yemek')">🍽 Ana Yemek <span class="cat-count" id="cnt-a">0</span></button>
-      <button class="cat-btn" onclick="setCat(this,'Salata')">🥗 Salata <span class="cat-count" id="cnt-s">0</span></button>
-      <button class="cat-btn" onclick="setCat(this,'Tatlı')">🍰 Tatlı <span class="cat-count" id="cnt-t">0</span></button>
-      <button class="cat-btn" onclick="setCat(this,'İçecek')">🧃 İçecek <span class="cat-count" id="cnt-i">0</span></button>
-      <button class="cat-btn" onclick="setCat(this,'Diğer')">🍴 Diğer <span class="cat-count" id="cnt-d">0</span></button>
+      <button class="cat-btn" onclick="setCat(this,'Sabah Kahvaltısı')">🍳 Kahvaltı</button>
+      <button class="cat-btn" onclick="setCat(this,'Çorba')">🍜 Çorba</button>
+      <button class="cat-btn" onclick="setCat(this,'Salata')">🥗 Salata</button>
+      <button class="cat-btn" onclick="setCat(this,'Zeytinyağlılar')">🫒 Zeytinyağlılar</button>
+      <button class="cat-btn" onclick="setCat(this,'Etli Yemekler')">🥩 Etli Yemekler</button>
+      <button class="cat-btn" onclick="setCat(this,'Tavuk Yemekleri')">🍗 Tavuk Yemekleri</button>
+      <button class="cat-btn" onclick="setCat(this,'Balık & Deniz Ürünleri')">🐟 Balık</button>
+      <button class="cat-btn" onclick="setCat(this,'Sebze Yemekleri')">🥦 Sebze</button>
+      <button class="cat-btn" onclick="setCat(this,'Baklagiller')">🫘 Baklagiller</button>
+      <button class="cat-btn" onclick="setCat(this,'Pilav & Makarna')">🍝 Pilav & Makarna</button>
+      <button class="cat-btn" onclick="setCat(this,'Börek & Hamur İşleri')">🥐 Börek</button>
+      <button class="cat-btn" onclick="setCat(this,'Tatlı & Pasta')">🍰 Tatlı</button>
+      <button class="cat-btn" onclick="setCat(this,'Turşu & Konserve')">🫙 Turşu</button>
+      <button class="cat-btn" onclick="setCat(this,'İçecek')">🧃 İçecek</button>
+      <button class="cat-btn" onclick="setCat(this,'Diğer')">🍴 Diğer</button>
     </div>
     <div class="tags-bar" id="tagsBar"></div>
     <div class="results-bar">
@@ -338,15 +346,25 @@
       <div class="form-group"><label>Tarif Adı *</label><input class="form-input" id="fName" placeholder="örn. Mercimek Çorbası" /></div>
       <div class="form-row">
         <div class="form-group"><label>Kategori</label>
-          <select class="form-select" id="fCat">
-            <option value="Diğer">Diğer</option>
-            <option value="Sabah Kahvaltısı">Kahvaltı</option>
-            <option value="Çorba">Çorba</option>
-            <option value="Ana Yemek">Ana Yemek</option>
-            <option value="Salata">Salata</option>
-            <option value="Tatlı">Tatlı</option>
-            <option value="İçecek">İçecek</option>
+          <select class="form-select" id="fCat" onchange="handleCatChange(this)">
+            <option value="Sabah Kahvaltısı">🍳 Kahvaltı</option>
+            <option value="Çorba">🍜 Çorba</option>
+            <option value="Salata">🥗 Salata</option>
+            <option value="Zeytinyağlılar">🫒 Zeytinyağlılar</option>
+            <option value="Etli Yemekler">🥩 Etli Yemekler</option>
+            <option value="Tavuk Yemekleri">🍗 Tavuk Yemekleri</option>
+            <option value="Balık & Deniz Ürünleri">🐟 Balık & Deniz Ürünleri</option>
+            <option value="Sebze Yemekleri">🥦 Sebze Yemekleri</option>
+            <option value="Baklagiller">🫘 Baklagiller</option>
+            <option value="Pilav & Makarna">🍝 Pilav & Makarna</option>
+            <option value="Börek & Hamur İşleri">🥐 Börek & Hamur İşleri</option>
+            <option value="Tatlı & Pasta">🍰 Tatlı & Pasta</option>
+            <option value="Turşu & Konserve">🫙 Turşu & Konserve</option>
+            <option value="İçecek">🧃 İçecek</option>
+            <option value="Diğer">🍴 Diğer</option>
+            <option value="__custom__">✏️ Kategori yaz...</option>
           </select>
+          <input class="form-input" id="fCatCustom" placeholder="Kategori adını yazın..." style="display:none;margin-top:6px;" />
         </div>
         <div class="form-group"><label>Emoji</label><input class="form-input" id="fEmoji" placeholder="🍲" style="font-size:20px;text-align:center;" /></div>
       </div>
@@ -450,7 +468,13 @@ const sb = createClient(SB_URL, SB_KEY, {
   }
 });
 
-const catEmoji = {'Sabah Kahvaltısı':'🍳','Çorba':'🍜','Ana Yemek':'🍽','Salata':'🥗','Tatlı':'🍰','İçecek':'🧃','Diğer':'🍴'};
+const catEmoji = {
+  'Sabah Kahvaltısı':'🍳','Çorba':'🍜','Salata':'🥗',
+  'Zeytinyağlılar':'🫒','Etli Yemekler':'🥩','Tavuk Yemekleri':'🍗',
+  'Balık & Deniz Ürünleri':'🐟','Sebze Yemekleri':'🥦','Baklagiller':'🫘',
+  'Pilav & Makarna':'🍝','Börek & Hamur İşleri':'🥐',
+  'Tatlı & Pasta':'🍰','Turşu & Konserve':'🫙','İçecek':'🧃','Diğer':'🍴'
+};
 const PAGE_SIZE = 20;
 const STORAGE_KEY = 'sb-doaeylatedhpnwqqtvpb-auth-token';
 
@@ -658,13 +682,12 @@ function updateCounts() {
   const c={};
   recipes.forEach(r=>{c[r.category]=(c[r.category]||0)+1;});
   document.getElementById('cnt-all').textContent=recipes.length;
-  document.getElementById('cnt-k').textContent=c['Sabah Kahvaltısı']||0;
-  document.getElementById('cnt-c').textContent=c['Çorba']||0;
-  document.getElementById('cnt-a').textContent=c['Ana Yemek']||0;
-  document.getElementById('cnt-s').textContent=c['Salata']||0;
-  document.getElementById('cnt-t').textContent=c['Tatlı']||0;
-  document.getElementById('cnt-i').textContent=c['İçecek']||0;
-  document.getElementById('cnt-d').textContent=c['Diğer']||0;
+  // Dinamik: her cat-btn için sayacı güncelle
+  document.querySelectorAll('#catBar .cat-btn').forEach(btn => {
+    const cat = btn.getAttribute('data-cat') || btn.onclick?.toString().match(/'([^']+)'/)?.[1] || '';
+    const span = btn.querySelector('.cat-count');
+    if (span && cat) span.textContent = c[cat]||0;
+  });
 }
 
 function getAllTags() {
@@ -899,7 +922,16 @@ function openEditModal(id) {
   document.getElementById('modalTitle').textContent='Tarifi Düzenle';
   document.getElementById('fId').value=r.id;
   document.getElementById('fName').value=r.name;
-  document.getElementById('fCat').value=r.category;
+  // Kategori listede var mı kontrol et
+  const catOpts = Array.from(document.getElementById('fCat').options).map(o=>o.value);
+  if (catOpts.includes(r.category)) {
+    document.getElementById('fCat').value=r.category;
+    document.getElementById('fCatCustom').style.display='none';
+  } else {
+    document.getElementById('fCat').value='__custom__';
+    document.getElementById('fCatCustom').value=r.category;
+    document.getElementById('fCatCustom').style.display='block';
+  }
   document.getElementById('fEmoji').value=r.emoji||'';
   document.getElementById('fTime').value=r.time_minutes||'';
   document.getElementById('fServ').value=r.servings||'';
@@ -931,7 +963,7 @@ async function saveRecipe() {
   const btn=document.getElementById('saveBtn');
   btn.disabled=true; btn.textContent='⏳ Kaydediliyor...';
   const payload={
-    name, category: document.getElementById('fCat').value,
+    name, category: getSelectedCategory(),
     emoji: document.getElementById('fEmoji').value.trim()||null,
     time_minutes: parseInt(document.getElementById('fTime').value)||null,
     servings: parseInt(document.getElementById('fServ').value)||null,
@@ -1105,11 +1137,20 @@ function parseRecipesFromText(rawText) {
 
 function guessCategory(t) {
   t=t.toLowerCase();
-  if(/çorba/.test(t))return'Çorba';if(/salata/.test(t))return'Salata';
-  if(/tatlı|pasta|kek|kurabiye|baklava|kadayıf|sütlaç/.test(t))return'Tatlı';
-  if(/kahvaltı|omlet|yumurta|reçel|börek/.test(t))return'Sabah Kahvaltısı';
-  if(/çay|kahve|şerbet|limonata/.test(t))return'İçecek';
-  if(/pilav|kebap|köfte|dolma|sarma|güveç|tavuk|balık|makarna/.test(t))return'Ana Yemek';
+  if(/çorba/.test(t))return'Çorba';
+  if(/salata/.test(t))return'Salata';
+  if(/tatlı|pasta|kek|kurabiye|baklava|kadayıf|sütlaç|puding/.test(t))return'Tatlı & Pasta';
+  if(/kahvaltı|omlet|yumurta|reçel/.test(t))return'Sabah Kahvaltısı';
+  if(/börek|poğaça|mantı|gözleme|hamur/.test(t))return'Börek & Hamur İşleri';
+  if(/pilav|makarna|risotto/.test(t))return'Pilav & Makarna';
+  if(/fasulye|nohut|mercimek|barbunya|bakla/.test(t))return'Baklagiller';
+  if(/turşu|reçel|konserve/.test(t))return'Turşu & Konserve';
+  if(/tavuk|piliç/.test(t))return'Tavuk Yemekleri';
+  if(/balık|karides|midye|ahtapot|kalamar/.test(t))return'Balık & Deniz Ürünleri';
+  if(/zeytinyağlı|dolma|sarma|enginar|kereviz|pirasa/.test(t))return'Zeytinyağlılar';
+  if(/köfte|kebap|kavurma|haşlama|kuzu|dana|kıyma/.test(t))return'Etli Yemekler';
+  if(/sebze|güveç|türlü|biber|patlıcan|kabak|ıspanak/.test(t))return'Sebze Yemekleri';
+  if(/çay|kahve|şerbet|limonata|smoothie/.test(t))return'İçecek';
   return'Diğer';
 }
 function guessEmoji(n) {
@@ -1148,6 +1189,27 @@ async function doImport() {
   }
   closeImport(); updateCounts(); updateTagsBar(); renderList();
   toast(`✅ ${ok} tarif başarıyla aktarıldı!`);
+}
+
+// ── KATEGORİ ──
+function handleCatChange(sel) {
+  const custom = document.getElementById('fCatCustom');
+  if (sel.value === '__custom__') {
+    custom.style.display = 'block';
+    custom.focus();
+  } else {
+    custom.style.display = 'none';
+    custom.value = '';
+  }
+}
+
+function getSelectedCategory() {
+  const sel = document.getElementById('fCat');
+  if (sel.value === '__custom__') {
+    const custom = document.getElementById('fCatCustom').value.trim();
+    return custom || 'Diğer';
+  }
+  return sel.value;
 }
 
 // ── HELPERS ──
