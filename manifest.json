@@ -1,34 +1,25 @@
 {
-  "name": "Tarif Defterim",
-  "short_name": "Tariflerim",
-  "description": "Kişisel dijital tarif defterim",
+  "name": "Aile Tarif Defteri",
+  "short_name": "Tarifler",
+  "description": "Aile tarif defteri",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#FDF8F3",
+  "background_color": "#E85D26",
   "theme_color": "#E85D26",
   "orientation": "portrait",
   "lang": "tr",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "icon-192.svg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "icon-192.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
-    }
-  ],
-  "categories": ["food", "lifestyle", "utilities"],
-  "shortcuts": [
-    {
-      "name": "Tarif Ekle",
-      "short_name": "Ekle",
-      "url": "./?action=add",
-      "description": "Yeni tarif ekle"
     }
   ]
 }
