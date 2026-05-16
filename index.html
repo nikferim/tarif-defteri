@@ -438,7 +438,8 @@
       <div class="profile-avatar" id="profileAvatar">👤</div>
       <div class="profile-name" id="profileName"></div>
       <div class="profile-sub" id="profileRole">Aile Tarif Defteri</div>
-      <button class="btn-logout" onclick="changeName()">✏️ İsmi Değiştir</button>
+      <button class="btn-logout" onclick="changeName()" style="margin-bottom:10px;">✏️ İsmi Değiştir</button>
+      <button class="btn-logout" onclick="logout()" style="color:#C00;border-color:#FCC;">🚪 Çıkış Yap</button>
     </div>
   </div>
 </div>
@@ -564,6 +565,18 @@ function showApp() {
   document.getElementById('profileName').textContent = userName + (isAdmin ? ' (Yönetici)' : '');
   const roleEl = document.getElementById('profileRole');
   if (roleEl) roleEl.textContent = isAdmin ? '👑 Yönetici — tüm tarifleri düzenleyebilir' : 'Aile Tarif Defteri';
+}
+
+function logout() {
+  localStorage.removeItem(NAME_KEY);
+  localStorage.removeItem(ADMIN_KEY);
+  isAdmin = false; userName = '';
+  closeProfile();
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('nameInput').value = '';
+  document.getElementById('adminPassWrap').style.display = 'none';
+  showNameScreen();
+  toast('👋 Çıkış yapıldı');
 }
 
 function changeName() {
