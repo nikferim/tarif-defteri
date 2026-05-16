@@ -29,17 +29,26 @@
     .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* NAME SCREEN */
-    #nameScreen { display: none; min-height: 100vh; align-items: center; justify-content: center; padding: 24px; }
-    .name-card { background: var(--card); border-radius: 24px; border: 1.5px solid var(--border); padding: 36px 24px; width: 100%; max-width: 400px; text-align: center; }
-    .name-logo { font-size: 56px; margin-bottom: 12px; }
-    .name-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
-    .name-sub { color: var(--text3); font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
-    .name-input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg); font-size: 16px; color: var(--text); font-family: 'Nunito', sans-serif; outline: none; text-align: center; margin-bottom: 14px; transition: border-color 0.2s; }
-    .name-input:focus { border-color: var(--accent); }
-    .name-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; }
-    .name-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .name-hint { font-size: 12px; color: var(--text3); margin-top: 12px; line-height: 1.5; }
+    /* GİRİŞ EKRANI */
+    #loginScreen { display: none; min-height: 100vh; align-items: center; justify-content: center; padding: 24px; }
+    .login-card { background: var(--card); border-radius: 24px; border: 1.5px solid var(--border); padding: 36px 24px; width: 100%; max-width: 400px; }
+    .login-logo { font-size: 48px; text-align: center; margin-bottom: 10px; }
+    .login-title { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--accent); text-align: center; margin-bottom: 4px; }
+    .login-sub { text-align: center; color: var(--text3); font-size: 13px; margin-bottom: 24px; }
+    .member-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 300px; overflow-y: auto; }
+    .member-btn { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: 14px; background: var(--bg); cursor: pointer; transition: all 0.15s; font-family: 'Nunito', sans-serif; }
+    .member-btn:hover, .member-btn.selected { border-color: var(--accent); background: var(--tag-bg); }
+    .member-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0; }
+    .member-avatar.admin { background: #7C3AED; }
+    .member-name { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; text-align: left; }
+    .member-badge { font-size: 11px; color: #7C3AED; font-weight: 700; }
+    .pass-wrap { display: none; margin-bottom: 16px; }
+    .pass-input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg); font-size: 15px; color: var(--text); font-family: 'Nunito', sans-serif; outline: none; transition: border-color 0.2s; }
+    .pass-input:focus { border-color: var(--accent); }
+    .login-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .login-error { background: #FEE; border: 1px solid #FCC; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #C00; display: none; margin-bottom: 12px; text-align: center; }
+    .login-loading { text-align: center; padding: 20px; color: var(--text3); font-size: 14px; }
 
     /* TOPBAR */
     .topbar { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1.5px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -213,9 +222,20 @@
     /* PROFILE */
     .profile-info { padding: 20px; text-align: center; }
     .profile-avatar { width: 60px; height: 60px; background: var(--tag-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: var(--accent); margin: 0 auto 10px; }
+    .profile-avatar.admin { background: #EDE9FE; color: #7C3AED; }
     .profile-name { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
     .profile-sub { font-size: 13px; color: var(--text3); margin-bottom: 20px; }
-    .btn-logout { width: 100%; padding: 13px; background: none; border: 1.5px solid var(--border); border-radius: 12px; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; color: var(--text2); cursor: pointer; }
+    .btn-action { width: 100%; padding: 13px; background: none; border: 1.5px solid var(--border); border-radius: 12px; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; color: var(--text2); cursor: pointer; margin-bottom: 10px; }
+    .btn-action.danger { color: #C00; border-color: #FCC; }
+    .btn-action.purple { color: #7C3AED; border-color: #DDD6FE; }
+
+    /* YÖNETİCİ PANELİ */
+    .admin-member-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .admin-member-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+    .admin-member-avatar.admin { background: #7C3AED; }
+    .admin-member-name { flex: 1; font-size: 14px; font-weight: 600; }
+    .admin-member-badge { font-size: 11px; color: #7C3AED; font-weight: 700; }
+    .btn-del-member { background: none; border: none; cursor: pointer; color: var(--text3); padding: 6px; font-size: 16px; }
 
     .screen { display: none; }
     .screen.active { display: block; }
@@ -230,18 +250,20 @@
   <div class="spinner"></div>
 </div>
 
-<!-- İSİM EKRANI -->
-<div id="nameScreen" style="display:none;">
-  <div class="name-card">
-    <div class="name-logo">🍽</div>
-    <div class="name-title">Aile Tarif Defteri</div>
-    <div class="name-sub">Hoş geldiniz! Devam etmek için<br>adınızı yazın.</div>
-    <input class="name-input" id="nameInput" placeholder="Adınız (örn: Ayşe Teyze)" maxlength="30" oninput="checkAdminName()" onkeydown="if(event.key==='Enter')saveName()" />
-    <div id="adminPassWrap" style="display:none;margin-bottom:14px;">
-      <input class="name-input" type="password" id="adminPassInput" placeholder="Yönetici şifresi" onkeydown="if(event.key==='Enter')saveName()" style="margin-bottom:0;" />
+<!-- GİRİŞ EKRANI -->
+<div id="loginScreen" style="display:none;">
+  <div class="login-card">
+    <div class="login-logo">🍽</div>
+    <div class="login-title">Aile Tarif Defteri</div>
+    <div class="login-sub">Adınızı seçin ve şifrenizi girin</div>
+    <div class="member-list" id="memberList">
+      <div class="login-loading">⏳ Üyeler yükleniyor...</div>
     </div>
-    <button class="name-btn" onclick="saveName()">Tarif Defterine Gir →</button>
-    <div class="name-hint">Adınız tariflerde "Ekleyen" olarak görünecek.<br>Bir dahaki girişte tekrar sorulmaz.</div>
+    <div class="pass-wrap" id="passWrap">
+      <input class="pass-input" type="password" id="passInput" placeholder="Şifreniz" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()" disabled>Giriş Yap →</button>
   </div>
 </div>
 
@@ -256,7 +278,7 @@
         </button>
         <button class="btn-icon" onclick="document.getElementById('fileInput').click()" title="Dosyadan aktar">📄</button>
         <input type="file" id="fileInput" accept=".html,.htm,.pdf" style="display:none" onchange="handleFileImport(event)" />
-        <div class="btn-icon" id="userAvatar" onclick="openProfile()" title="Profilim">👤</div>
+        <div class="btn-icon" id="userAvatar" onclick="openProfile()">👤</div>
       </div>
     </div>
     <div class="search-area">
@@ -311,8 +333,8 @@
     <div class="topbar">
       <div class="topbar-title">🛒 <span>Alışveriş</span></div>
       <div class="topbar-right">
-        <button class="btn-icon" onclick="clearDoneShop()" title="Alınanları temizle">✓</button>
-        <button class="btn-icon" onclick="clearAllShop()" title="Tümünü temizle">🗑</button>
+        <button class="btn-icon" onclick="clearDoneShop()">✓</button>
+        <button class="btn-icon" onclick="clearAllShop()">🗑</button>
       </div>
     </div>
     <div id="shopContent" style="padding-bottom:80px;"></div>
@@ -414,8 +436,8 @@
         <button class="icon-btn fav" id="detailFavBtn" onclick="toggleFavDetail()">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         </button>
-        <button class="icon-btn" onclick="addToShop()" title="Alışveriş listesine ekle">🛒</button>
-        <button class="icon-btn" onclick="printRecipe()" title="Yazdır">🖨</button>
+        <button class="icon-btn" onclick="addToShop()">🛒</button>
+        <button class="icon-btn" onclick="printRecipe()">🖨</button>
         <button class="icon-btn" id="detailEditBtn" onclick="editFromDetail()">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         </button>
@@ -438,8 +460,27 @@
       <div class="profile-avatar" id="profileAvatar">👤</div>
       <div class="profile-name" id="profileName"></div>
       <div class="profile-sub" id="profileRole">Aile Tarif Defteri</div>
-      <button class="btn-logout" onclick="changeName()" style="margin-bottom:10px;">✏️ İsmi Değiştir</button>
-      <button class="btn-logout" onclick="logout()" style="color:#C00;border-color:#FCC;">🚪 Çıkış Yap</button>
+      <button class="btn-action purple" id="adminPanelBtn" onclick="closeProfile();openAdminPanel()" style="display:none;">👑 Yönetici Paneli</button>
+      <button class="btn-action danger" onclick="logout()">🚪 Çıkış Yap</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: YÖNETİCİ PANELİ -->
+<div class="modal-overlay" id="adminOverlay" onclick="handleAdminOverlay(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">👑 Yönetici Paneli</div>
+      <button class="btn-close" onclick="closeAdminPanel()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line stroke-linecap="round" x1="18" y1="6" x2="6" y2="18"/><line stroke-linecap="round" x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="form-body">
+      <div class="section-title" style="margin-top:0;">Yeni Üye Ekle</div>
+      <div class="form-group"><label>Ad Soyad</label><input class="form-input" id="newMemberName" placeholder="örn. Ayşe Teyze" /></div>
+      <div class="form-group"><label>Şifre</label><input class="form-input" id="newMemberPass" placeholder="örn. ayse123" /></div>
+      <button class="btn-save" onclick="addMember()" style="margin-bottom:24px;">➕ Üye Ekle</button>
+      <div class="section-title">Mevcut Üyeler</div>
+      <div id="adminMemberList"></div>
     </div>
   </div>
 </div>
@@ -472,27 +513,22 @@
 
 <script>
 const { createClient } = supabase;
-const sb = createClient('https://doaeylatedhpnwqqtvpb.supabase.co', 'sb_publishable_tRsM1gq-b2Pfa9Rh9uXpoA_G2U1BNFJ');
+const sb = createClient('https://doaeylatedhpnwqqtvpb.supabase.co','sb_publishable_tRsM1gq-b2Pfa9Rh9uXpoA_G2U1BNFJ');
 
 const catEmoji = {
-  'Sabah Kahvaltısı':'🍳','Çorba':'🍜','Salata':'🥗',
-  'Zeytinyağlılar':'🫒','Etli Yemekler':'🥩','Tavuk Yemekleri':'🍗',
-  'Balık & Deniz Ürünleri':'🐟','Sebze Yemekleri':'🥦','Baklagiller':'🫘',
-  'Pilav & Makarna':'🍝','Börek & Hamur İşleri':'🥐',
-  'Tatlı & Pasta':'🍰','Turşu & Konserve':'🫙','İçecek':'🧃','Diğer':'🍴'
+  'Sabah Kahvaltısı':'🍳','Çorba':'🍜','Salata':'🥗','Zeytinyağlılar':'🫒',
+  'Etli Yemekler':'🥩','Tavuk Yemekleri':'🍗','Balık & Deniz Ürünleri':'🐟',
+  'Sebze Yemekleri':'🥦','Baklagiller':'🫘','Pilav & Makarna':'🍝',
+  'Börek & Hamur İşleri':'🥐','Tatlı & Pasta':'🍰','Turşu & Konserve':'🫙',
+  'İçecek':'🧃','Diğer':'🍴'
 };
-
 const PAGE_SIZE = 20;
-const NAME_KEY = 'tarif_defteri_name';
+const SESSION_KEY = 'tarif_session';
 
-const ADMIN_NAME = 'fsnt';
-const ADMIN_PASS = '15042005';
-const ADMIN_KEY  = 'tarif_admin_verified';
+let recipes=[], members=[], currentCat='', currentTag='', currentSort='new', currentPage=1;
+let editingId=null, detailId=null, currentUser=null, formTags=[], importList2=[], searchTimer=null;
 
-let recipes=[], currentCat='', currentTag='', currentSort='new', currentPage=1;
-let editingId=null, detailId=null, userName='', isAdmin=false, formTags=[], importList=[], searchTimer=null;
-
-// ── Türkçe normalize ──
+// ── NORMALIZE ──
 function normalize(s) {
   if (!s) return '';
   return s.toLowerCase()
@@ -503,102 +539,179 @@ function normalize(s) {
 
 // ── INIT ──
 async function init() {
-  // İsim var mı kontrol et
-  const saved = localStorage.getItem(NAME_KEY);
-  const adminVerified = localStorage.getItem(ADMIN_KEY);
-  document.getElementById('loadingScreen').style.display = 'none';
-  if (saved && saved.trim()) {
-    userName = saved.trim();
-    isAdmin = (userName === ADMIN_NAME && adminVerified === '1');
-    showApp();
-    await fetchRecipes();
-  } else {
-    showNameScreen();
-  }
-}
-
-function showNameScreen() {
-  document.getElementById('nameScreen').style.display = 'flex';
-  document.getElementById('appShell').style.display = 'none';
-  setTimeout(() => document.getElementById('nameInput').focus(), 300);
-}
-
-function checkAdminName() {
-  const val = document.getElementById('nameInput').value.trim();
-  const wrap = document.getElementById('adminPassWrap');
-  wrap.style.display = (val === ADMIN_NAME) ? 'block' : 'none';
-}
-
-function saveName() {
-  const val = document.getElementById('nameInput').value.trim();
-  if (!val) { document.getElementById('nameInput').style.borderColor = 'var(--accent)'; return; }
-
-  // Admin girişi
-  if (val === ADMIN_NAME) {
-    const pass = document.getElementById('adminPassInput').value;
-    if (pass !== ADMIN_PASS) {
-      document.getElementById('adminPassInput').style.borderColor = 'var(--accent)';
-      document.getElementById('adminPassInput').placeholder = '❌ Şifre hatalı, tekrar deneyin';
-      document.getElementById('adminPassInput').value = '';
-      return;
+  // Session kontrolü
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) {
+      const session = JSON.parse(raw);
+      if (session && session.name && session.exp > Date.now()) {
+        currentUser = session;
+        document.getElementById('loadingScreen').style.display = 'none';
+        showApp();
+        await fetchRecipes();
+        return;
+      }
     }
-    isAdmin = true;
-    localStorage.setItem(ADMIN_KEY, '1');
-  } else {
-    isAdmin = false;
-    localStorage.removeItem(ADMIN_KEY);
-  }
+  } catch(e) {}
 
-  userName = val;
-  localStorage.setItem(NAME_KEY, userName);
-  document.getElementById('nameScreen').style.display = 'none';
+  // Session yoksa üyeleri yükle ve giriş ekranını göster
+  await loadMembers();
+  document.getElementById('loadingScreen').style.display = 'none';
+  showLogin();
+}
+
+// ── ÜYELERİ YÜKLE ──
+async function loadMembers() {
+  const { data, error } = await sb.from('members').select('id,name,is_admin').order('is_admin', { ascending: false }).order('name');
+  if (error) { members = []; return; }
+  members = data || [];
+  renderMemberList();
+}
+
+function renderMemberList() {
+  const list = document.getElementById('memberList');
+  if (!members.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text3);padding:20px;">Henüz üye eklenmemiş.</div>';
+    return;
+  }
+  list.innerHTML = members.map(m => `
+    <button class="member-btn" onclick="selectMember('${m.id}','${esc(m.name)}',${m.is_admin})">
+      <div class="member-avatar ${m.is_admin?'admin':''}">${m.name[0].toUpperCase()}</div>
+      <span class="member-name">${esc(m.name)}</span>
+      ${m.is_admin ? '<span class="member-badge">👑 Yönetici</span>' : ''}
+    </button>`).join('');
+}
+
+let selectedMemberId = null, selectedMemberName = '', selectedMemberIsAdmin = false;
+
+function selectMember(id, name, isAdmin) {
+  selectedMemberId = id; selectedMemberName = name; selectedMemberIsAdmin = isAdmin;
+  document.querySelectorAll('.member-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  document.getElementById('passWrap').style.display = 'block';
+  document.getElementById('passInput').value = '';
+  document.getElementById('passInput').focus();
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loginError').style.display = 'none';
+}
+
+async function doLogin() {
+  if (!selectedMemberId) { showLoginError('Lütfen adınızı seçin.'); return; }
+  const pass = document.getElementById('passInput').value;
+  if (!pass) { showLoginError('Lütfen şifrenizi girin.'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = '⏳ Kontrol ediliyor...';
+
+  // Şifreyi Supabase'den kontrol et
+  const { data, error } = await sb.from('members').select('id,name,is_admin,password').eq('id', selectedMemberId).single();
+
+  btn.disabled = false; btn.textContent = 'Giriş Yap →';
+
+  if (error || !data) { showLoginError('Bir hata oluştu, tekrar deneyin.'); return; }
+  if (data.password !== pass) { showLoginError('❌ Şifre hatalı, tekrar deneyin.'); document.getElementById('passInput').value=''; document.getElementById('passInput').focus(); return; }
+
+  // Giriş başarılı — session kaydet (8 saatlik)
+  currentUser = { id: data.id, name: data.name, isAdmin: data.is_admin, exp: Date.now() + 8*60*60*1000 };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+
+  document.getElementById('loginScreen').style.display = 'none';
   showApp();
-  fetchRecipes();
+  await fetchRecipes();
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
 }
 
 function showApp() {
-  document.getElementById('nameScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appShell').style.display = 'block';
-  const l = userName ? userName[0].toUpperCase() : '👤';
-  document.getElementById('userAvatar').textContent = isAdmin ? '👑' : l;
-  document.getElementById('profileAvatar').textContent = isAdmin ? '👑' : l;
-  document.getElementById('profileName').textContent = userName + (isAdmin ? ' (Yönetici)' : '');
-  const roleEl = document.getElementById('profileRole');
-  if (roleEl) roleEl.textContent = isAdmin ? '👑 Yönetici — tüm tarifleri düzenleyebilir' : 'Aile Tarif Defteri';
+  const l = currentUser.name[0].toUpperCase();
+  const av = document.getElementById('userAvatar');
+  av.textContent = currentUser.isAdmin ? '👑' : l;
+  av.style.background = currentUser.isAdmin ? '#EDE9FE' : '';
+  av.style.color = currentUser.isAdmin ? '#7C3AED' : '';
+  document.getElementById('profileAvatar').textContent = currentUser.isAdmin ? '👑' : l;
+  document.getElementById('profileAvatar').className = 'profile-avatar' + (currentUser.isAdmin ? ' admin' : '');
+  document.getElementById('profileName').textContent = currentUser.name;
+  document.getElementById('profileRole').textContent = currentUser.isAdmin ? '👑 Yönetici' : 'Aile üyesi';
+  document.getElementById('adminPanelBtn').style.display = currentUser.isAdmin ? 'block' : 'none';
 }
 
 function logout() {
-  localStorage.removeItem(NAME_KEY);
-  localStorage.removeItem(ADMIN_KEY);
-  isAdmin = false; userName = '';
+  localStorage.removeItem(SESSION_KEY);
+  currentUser = null; recipes = [];
+  selectedMemberId = null; selectedMemberName = '';
+  document.getElementById('passWrap').style.display = 'none';
+  document.getElementById('loginBtn').disabled = true;
+  document.getElementById('loginError').style.display = 'none';
+  document.querySelectorAll('.member-btn').forEach(b=>b.classList.remove('selected'));
   closeProfile();
-  document.getElementById('appShell').style.display = 'none';
-  document.getElementById('nameInput').value = '';
-  document.getElementById('adminPassWrap').style.display = 'none';
-  showNameScreen();
+  showLogin();
   toast('👋 Çıkış yapıldı');
-}
-
-function changeName() {
-  localStorage.removeItem(NAME_KEY);
-  localStorage.removeItem(ADMIN_KEY);
-  isAdmin = false;
-  closeProfile();
-  document.getElementById('appShell').style.display = 'none';
-  document.getElementById('nameInput').value = '';
-  document.getElementById('adminPassWrap').style.display = 'none';
-  showNameScreen();
 }
 
 function openProfile()  { document.getElementById('profileOverlay').classList.add('open'); }
 function closeProfile() { document.getElementById('profileOverlay').classList.remove('open'); }
 function handleProfileOverlay(e) { if(e.target===document.getElementById('profileOverlay')) closeProfile(); }
 
+// ── YÖNETİCİ PANELİ ──
+async function openAdminPanel() {
+  document.getElementById('adminOverlay').classList.add('open');
+  await renderAdminMembers();
+}
+function closeAdminPanel() { document.getElementById('adminOverlay').classList.remove('open'); }
+function handleAdminOverlay(e) { if(e.target===document.getElementById('adminOverlay')) closeAdminPanel(); }
+
+async function renderAdminMembers() {
+  const { data } = await sb.from('members').select('*').order('is_admin',{ascending:false}).order('name');
+  const list = document.getElementById('adminMemberList');
+  if (!data||!data.length) { list.innerHTML='<p style="color:var(--text3);font-size:13px;">Henüz üye yok.</p>'; return; }
+  list.innerHTML = data.map(m=>`
+    <div class="admin-member-item">
+      <div class="admin-member-avatar ${m.is_admin?'admin':''}">${m.name[0].toUpperCase()}</div>
+      <div style="flex:1">
+        <div class="admin-member-name">${esc(m.name)} ${m.is_admin?'<span class="admin-member-badge">👑</span>':''}</div>
+        <div style="font-size:11px;color:var(--text3);">Şifre: ${esc(m.password)}</div>
+      </div>
+      ${!m.is_admin?`<button class="btn-del-member" onclick="deleteMember('${m.id}','${esc(m.name)}')">🗑</button>`:''}
+    </div>`).join('');
+}
+
+async function addMember() {
+  const name = document.getElementById('newMemberName').value.trim();
+  const pass = document.getElementById('newMemberPass').value.trim();
+  if (!name||!pass) { toast('⚠️ Ad ve şifre gereklidir'); return; }
+  const { error } = await sb.from('members').insert({ name, password: pass, is_admin: false });
+  if (error) { toast('⚠️ '+error.message); return; }
+  document.getElementById('newMemberName').value='';
+  document.getElementById('newMemberPass').value='';
+  await renderAdminMembers();
+  await loadMembers();
+  toast('✅ '+name+' eklendi');
+}
+
+async function deleteMember(id, name) {
+  if (!confirm(name+' üyelikten çıkarılsın mı?')) return;
+  const { error } = await sb.from('members').delete().eq('id', id);
+  if (error) { toast('⚠️ Silinemedi'); return; }
+  await renderAdminMembers();
+  await loadMembers();
+  toast('🗑 '+name+' çıkarıldı');
+}
+
 // ── DATA ──
 async function fetchRecipes() {
-  const { data, error } = await sb.from('recipes').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('recipes').select('*').order('created_at',{ascending:false});
   if (error) { toast('⚠️ Veriler yüklenemedi'); return; }
-  recipes = data || [];
+  recipes = data||[];
   updateCounts(); updateTagsBar(); renderList();
 }
 
@@ -608,89 +721,68 @@ function showScreen(name) {
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
-  if (name==='favs')  renderFavs();
-  if (name==='stats') renderStats();
-  if (name==='shop')  renderShop();
+  if(name==='favs') renderFavs();
+  if(name==='stats') renderStats();
+  if(name==='shop') renderShop();
 }
 
 // ── SORT ──
-function toggleSort() { const d=document.getElementById('sortDropdown'); d.style.display=d.style.display==='block'?'none':'block'; }
-function setSort(val, label, el) {
-  currentSort=val; currentPage=1;
+function toggleSort(){const d=document.getElementById('sortDropdown');d.style.display=d.style.display==='block'?'none':'block';}
+function setSort(val,label,el){
+  currentSort=val;currentPage=1;
   document.getElementById('sortLabel').textContent=label;
   document.querySelectorAll('.sort-option').forEach(o=>o.classList.remove('active'));
-  if(el) el.classList.add('active');
+  if(el)el.classList.add('active');
   document.getElementById('sortDropdown').style.display='none';
   renderList();
 }
-document.addEventListener('click', e => { if (!e.target.closest('.sort-wrap')) document.getElementById('sortDropdown').style.display='none'; });
+document.addEventListener('click',e=>{if(!e.target.closest('.sort-wrap'))document.getElementById('sortDropdown').style.display='none';});
 
 // ── FILTER ──
-function onSearch() { clearTimeout(searchTimer); searchTimer=setTimeout(()=>{ currentPage=1; renderList(); },200); }
+function onSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(()=>{currentPage=1;renderList();},200);}
+function setCat(btn,cat){currentCat=cat;currentPage=1;document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderList();}
+function setTag(tag){currentTag=currentTag===tag?'':tag;currentPage=1;updateTagsBar();renderList();}
 
-function setCat(btn, cat) {
-  currentCat=cat; currentPage=1;
-  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); renderList();
-}
-
-function setTag(tag) {
-  currentTag = currentTag===tag ? '' : tag;
-  currentPage=1; updateTagsBar(); renderList();
-}
-
-function getFiltered() {
-  const q = normalize(document.getElementById('searchInput')?.value||'');
-  let items = recipes.filter(r => {
-    const mc = !currentCat || r.category===currentCat;
-    const mt = !currentTag || (r.tags||[]).includes(currentTag);
-    const mq = !q || normalize(r.name).includes(q) ||
-      (r.ingredients||[]).some(i=>normalize(i).includes(q)) ||
-      (r.tags||[]).some(t=>normalize(t).includes(q)) ||
-      normalize(r.added_by||'').includes(q);
-    return mc && mt && mq;
+function getFiltered(){
+  const q=normalize(document.getElementById('searchInput')?.value||'');
+  let items=recipes.filter(r=>{
+    const mc=!currentCat||r.category===currentCat;
+    const mt=!currentTag||(r.tags||[]).includes(currentTag);
+    const mq=!q||normalize(r.name).includes(q)||(r.ingredients||[]).some(i=>normalize(i).includes(q))||(r.tags||[]).some(t=>normalize(t).includes(q));
+    return mc&&mt&&mq;
   });
-  if (currentSort==='alpha')       items.sort((a,b)=>normalize(a.name).localeCompare(normalize(b.name)));
-  else if (currentSort==='alpha_desc') items.sort((a,b)=>normalize(b.name).localeCompare(normalize(a.name)));
-  else if (currentSort==='time')   items.sort((a,b)=>(a.time_minutes||9999)-(b.time_minutes||9999));
-  else if (currentSort==='fav')    items.sort((a,b)=>(b.is_favorite?1:0)-(a.is_favorite?1:0));
+  if(currentSort==='alpha')items.sort((a,b)=>normalize(a.name).localeCompare(normalize(b.name)));
+  else if(currentSort==='alpha_desc')items.sort((a,b)=>normalize(b.name).localeCompare(normalize(a.name)));
+  else if(currentSort==='time')items.sort((a,b)=>(a.time_minutes||9999)-(b.time_minutes||9999));
+  else if(currentSort==='fav')items.sort((a,b)=>(b.is_favorite?1:0)-(a.is_favorite?1:0));
   return items;
 }
 
 // ── COUNTS & TAGS ──
-function updateCounts() {
-  const c={};
-  recipes.forEach(r=>{c[r.category]=(c[r.category]||0)+1;});
+function updateCounts(){
+  const c={};recipes.forEach(r=>{c[r.category]=(c[r.category]||0)+1;});
   document.getElementById('cnt-all').textContent=recipes.length;
-  document.querySelectorAll('#catBar .cat-btn').forEach(btn => {
-    const onclk = btn.getAttribute('onclick')||'';
-    const m = onclk.match(/'([^']+)'/);
-    if (m && m[1]) {
-      let span = btn.querySelector('.cat-count');
-      if (!span) { span=document.createElement('span'); span.className='cat-count'; btn.appendChild(span); }
-      span.textContent = c[m[1]]||0;
-    }
+  document.querySelectorAll('#catBar .cat-btn').forEach(btn=>{
+    const onclk=btn.getAttribute('onclick')||'';
+    const m=onclk.match(/'([^']+)'/);
+    if(m&&m[1]){let span=btn.querySelector('.cat-count');if(!span){span=document.createElement('span');span.className='cat-count';btn.appendChild(span);}span.textContent=c[m[1]]||0;}
   });
 }
 
-function getAllTags() {
-  const s=new Set();
-  recipes.forEach(r=>(r.tags||[]).forEach(t=>s.add(t)));
-  return [...s].sort();
-}
+function getAllTags(){const s=new Set();recipes.forEach(r=>(r.tags||[]).forEach(t=>s.add(t)));return[...s].sort();}
 
-function updateTagsBar() {
-  const tags=getAllTags();
-  const bar=document.getElementById('tagsBar');
-  if (!tags.length) { bar.innerHTML=''; return; }
+function updateTagsBar(){
+  const tags=getAllTags();const bar=document.getElementById('tagsBar');
+  if(!tags.length){bar.innerHTML='';return;}
   bar.innerHTML=tags.map(t=>`<button class="tag-filter-btn ${currentTag===t?'active':''}" onclick="setTag('${esc(t)}')">#${esc(t)}</button>`).join('');
 }
 
 // ── RENDER ──
-function cardHTML(r) {
+function canEdit(r){ return currentUser&&(currentUser.isAdmin||!r.added_by||r.added_by===currentUser.name); }
+
+function cardHTML(r){
   const tags=(r.tags||[]).map(t=>`<span class="recipe-etag">#${esc(t)}</span>`).join('');
-  const isOwner = !r.added_by || r.added_by === userName;
-  return `<div class="recipe-card" onclick="openDetail('${r.id}')">
+  return`<div class="recipe-card" onclick="openDetail('${r.id}')">
     <div class="recipe-card-body">
       <div class="recipe-card-header">
         <div class="recipe-card-title">${r.emoji||catEmoji[r.category]||'🍴'} ${esc(r.name)}</div>
@@ -698,9 +790,9 @@ function cardHTML(r) {
           <button class="icon-btn fav ${r.is_favorite?'active':''}" onclick="toggleFav(event,'${r.id}')">
             <svg fill="${r.is_favorite?'currentColor':'none'}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           </button>
-          ${(isOwner || isAdmin) ? `<button class="icon-btn" onclick="deleteRecipe(event,'${r.id}')">
+          ${canEdit(r)?`<button class="icon-btn" onclick="deleteRecipe(event,'${r.id}')">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline stroke-linecap="round" stroke-linejoin="round" points="3 6 5 6 21 6"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg>
-          </button>` : ''}
+          </button>`:''}
         </div>
       </div>
       <div class="recipe-card-meta">
@@ -715,25 +807,21 @@ function cardHTML(r) {
   </div>`;
 }
 
-function renderList() {
-  const filtered=getFiltered();
-  const total=filtered.length;
+function renderList(){
+  const filtered=getFiltered();const total=filtered.length;
   const totalPages=Math.max(1,Math.ceil(total/PAGE_SIZE));
-  if (currentPage>totalPages) currentPage=totalPages;
+  if(currentPage>totalPages)currentPage=totalPages;
   const pageItems=filtered.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE);
   document.getElementById('resultsCount').textContent=total?`${total} tarif`:'';
   const list=document.getElementById('recipeList');
-  if (!pageItems.length) {
-    list.innerHTML=`<div class="empty-state"><div class="big">🍳</div><p>${recipes.length===0?'Henüz tarif yok.<br>İlk tarifinizi ekleyin!':'Arama sonucu bulunamadı.'}</p></div>`;
-    document.getElementById('pagination').innerHTML=''; return;
-  }
+  if(!pageItems.length){list.innerHTML=`<div class="empty-state"><div class="big">🍳</div><p>${recipes.length===0?'Henüz tarif yok.':'Arama sonucu bulunamadı.'}</p></div>`;document.getElementById('pagination').innerHTML='';return;}
   list.innerHTML=pageItems.map(r=>cardHTML(r)).join('');
   renderPagination(currentPage,totalPages);
 }
 
-function renderPagination(page,total) {
+function renderPagination(page,total){
   const pg=document.getElementById('pagination');
-  if (total<=1){pg.innerHTML='';return;}
+  if(total<=1){pg.innerHTML='';return;}
   let html=`<button class="page-btn" onclick="goPage(${page-1})" ${page===1?'disabled':''}>‹</button>`;
   const s=Math.max(1,page-2),e=Math.min(total,page+2);
   if(s>1)html+=`<button class="page-btn" onclick="goPage(1)">1</button>${s>2?'<span class="page-info">…</span>':''}`;
@@ -745,22 +833,21 @@ function renderPagination(page,total) {
 
 function goPage(p){currentPage=p;renderList();window.scrollTo(0,0);}
 
-function renderFavs() {
-  const favs=recipes.filter(r=>r.is_favorite);
-  const list=document.getElementById('favList');
+function renderFavs(){
+  const favs=recipes.filter(r=>r.is_favorite);const list=document.getElementById('favList');
   if(!favs.length){list.innerHTML=`<div class="empty-state"><div class="big">❤️</div><p>Henüz favori tarif yok.</p></div>`;return;}
   list.innerHTML=favs.map(r=>cardHTML(r)).join('');
 }
 
-function renderStats() {
+function renderStats(){
   document.getElementById('statsDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
   const favCount=recipes.filter(r=>r.is_favorite).length;
   const cats={};recipes.forEach(r=>{cats[r.category]=(cats[r.category]||0)+1;});
   const contributors=new Set(recipes.map(r=>r.added_by).filter(Boolean)).size;
   document.getElementById('statsGrid').innerHTML=`
     <div class="stat-card"><div class="stat-num">${recipes.length}</div><div class="stat-lbl">Toplam Tarif</div></div>
-    <div class="stat-card"><div class="stat-num">${favCount}</div><div class="stat-lbl">Favori Tarif</div></div>
-    <div class="stat-card"><div class="stat-num">${Object.keys(cats).length}</div><div class="stat-lbl">Kategori</div></div>
+    <div class="stat-card"><div class="stat-num">${favCount}</div><div class="stat-lbl">Favori</div></div>
+    <div class="stat-card"><div class="stat-num">${members.length}</div><div class="stat-lbl">Aile Üyesi</div></div>
     <div class="stat-card"><div class="stat-num">${contributors}</div><div class="stat-lbl">Katkıda Bulunan</div></div>`;
   const catEl=document.getElementById('statsCats');
   if(!Object.keys(cats).length){catEl.innerHTML='<div class="empty-state"><p>Henüz tarif eklenmedi.</p></div>';return;}
@@ -776,11 +863,11 @@ function renderStats() {
     </div>`).join('');
 }
 
-// ── SHOPPING LIST ──
-async function renderShop() {
+// ── SHOPPING ──
+async function renderShop(){
   const content=document.getElementById('shopContent');
   content.innerHTML=`<div class="imp-progress"><div class="big">⏳</div><p>Yükleniyor...</p></div>`;
-  const { data,error }=await sb.from('shopping_items').select('*').order('created_at',{ascending:true});
+  const {data,error}=await sb.from('shopping_items').select('*').order('created_at',{ascending:true});
   if(error){content.innerHTML=`<div class="empty-state"><p>Yüklenemedi.</p></div>`;return;}
   const items=data||[];
   if(!items.length){content.innerHTML=`<div class="empty-state"><div class="big">🛒</div><p>Alışveriş listesi boş.<br>Tarif detayında 🛒 butonuna basın.</p></div>`;return;}
@@ -788,30 +875,15 @@ async function renderShop() {
   items.forEach(item=>{const g=item.recipe_name||'Diğer';if(!grouped[g])grouped[g]=[];grouped[g].push(item);});
   content.innerHTML=Object.entries(grouped).map(([recipe,items])=>`
     <div class="shop-section-title">${esc(recipe)}</div>
-    ${items.map(item=>`
-      <div class="shop-item ${item.is_done?'done':''}" id="si-${item.id}">
-        <input type="checkbox" ${item.is_done?'checked':''} onchange="toggleShop('${item.id}',this.checked)" />
-        <label>${esc(item.name)}</label>
-      </div>`).join('')}`).join('');
+    ${items.map(item=>`<div class="shop-item ${item.is_done?'done':''}" id="si-${item.id}">
+      <input type="checkbox" ${item.is_done?'checked':''} onchange="toggleShop('${item.id}',this.checked)" />
+      <label>${esc(item.name)}</label>
+    </div>`).join('')}`).join('');
 }
 
-async function toggleShop(id,done){
-  await sb.from('shopping_items').update({is_done:done}).eq('id',id);
-  const el=document.getElementById('si-'+id);
-  if(el)el.classList.toggle('done',done);
-}
-
-async function clearDoneShop(){
-  await sb.from('shopping_items').delete().eq('is_done',true);
-  renderShop();toast('✅ Alınanlar temizlendi');
-}
-
-async function clearAllShop(){
-  if(!confirm('Alışveriş listesi tamamen silinsin mi?'))return;
-  await sb.from('shopping_items').delete().neq('id','00000000-0000-0000-0000-000000000000');
-  renderShop();
-}
-
+async function toggleShop(id,done){await sb.from('shopping_items').update({is_done:done}).eq('id',id);const el=document.getElementById('si-'+id);if(el)el.classList.toggle('done',done);}
+async function clearDoneShop(){await sb.from('shopping_items').delete().eq('is_done',true);renderShop();toast('✅ Alınanlar temizlendi');}
+async function clearAllShop(){if(!confirm('Alışveriş listesi tamamen silinsin mi?'))return;await sb.from('shopping_items').delete().neq('id','00000000-0000-0000-0000-000000000000');renderShop();}
 async function addToShop(){
   const r=recipes.find(r=>r.id===detailId);
   if(!r||!r.ingredients||!r.ingredients.length){toast('⚠️ Bu tarifte malzeme yok');return;}
@@ -822,86 +894,29 @@ async function addToShop(){
 }
 
 // ── KATEGORİ ──
-function handleCatChange(sel) {
-  const custom=document.getElementById('fCatCustom');
-  if(sel.value==='__custom__'){custom.style.display='block';custom.focus();}
-  else{custom.style.display='none';custom.value='';}
-}
-
-function getSelectedCategory() {
-  const sel=document.getElementById('fCat');
-  if(sel.value==='__custom__'){
-    const custom=document.getElementById('fCatCustom').value.trim();
-    return custom||'Diğer';
-  }
-  return sel.value;
-}
+function handleCatChange(sel){const c=document.getElementById('fCatCustom');if(sel.value==='__custom__'){c.style.display='block';c.focus();}else{c.style.display='none';c.value='';}}
+function getSelectedCategory(){const sel=document.getElementById('fCat');if(sel.value==='__custom__'){const c=document.getElementById('fCatCustom').value.trim();return c||'Diğer';}return sel.value;}
 
 // ── TAGS INPUT ──
-function initTagsInput() {
-  formTags=[];
-  const wrap=document.getElementById('tagsWrap');
-  wrap.innerHTML=`<input class="tags-text-input" id="tagTxt" placeholder="vejetaryen, pratik..." onkeydown="onTagKey(event)" />`;
-}
-
-function onTagKey(e) {
-  if(e.key==='Enter'||e.key===','){
-    e.preventDefault();
-    const val=e.target.value.trim().replace(/,/g,'');
-    if(val&&!formTags.includes(val)){formTags.push(val);renderFormTags();}
-    e.target.value='';
-  }
-}
-
-function renderFormTags() {
-  const wrap=document.getElementById('tagsWrap');
-  wrap.innerHTML='';
-  formTags.forEach(t=>{
-    const chip=document.createElement('span');chip.className='tag-chip';
-    chip.innerHTML=`#${esc(t)} <button onclick="removeTag('${esc(t)}')" type="button">&times;</button>`;
-    wrap.appendChild(chip);
-  });
-  const input=document.createElement('input');
-  input.className='tags-text-input';input.id='tagTxt';input.placeholder='Etiket ekle...';
-  input.addEventListener('keydown',onTagKey);
-  wrap.appendChild(input);
-}
-
+function initTagsInput(){formTags=[];const wrap=document.getElementById('tagsWrap');wrap.innerHTML=`<input class="tags-text-input" id="tagTxt" placeholder="vejetaryen, pratik..." onkeydown="onTagKey(event)" />`;}
+function onTagKey(e){if(e.key==='Enter'||e.key===','){e.preventDefault();const val=e.target.value.trim().replace(/,/g,'');if(val&&!formTags.includes(val)){formTags.push(val);renderFormTags();}e.target.value='';}}
+function renderFormTags(){const wrap=document.getElementById('tagsWrap');wrap.innerHTML='';formTags.forEach(t=>{const chip=document.createElement('span');chip.className='tag-chip';chip.innerHTML=`#${esc(t)} <button onclick="removeTag('${esc(t)}')" type="button">&times;</button>`;wrap.appendChild(chip);});const input=document.createElement('input');input.className='tags-text-input';input.id='tagTxt';input.placeholder='Etiket ekle...';input.addEventListener('keydown',onTagKey);wrap.appendChild(input);}
 function removeTag(tag){formTags=formTags.filter(t=>t!==tag);renderFormTags();}
 
 // ── FAV ──
-async function toggleFav(e,id){
-  e.stopPropagation();
-  const r=recipes.find(r=>r.id===id);if(!r)return;
-  const v=!r.is_favorite;
-  await sb.from('recipes').update({is_favorite:v}).eq('id',id);
-  r.is_favorite=v;renderList();toast(v?'❤️ Favorilere eklendi':'💔 Favorilerden çıkarıldı');
-}
-
-async function toggleFavDetail(){
-  const r=recipes.find(r=>r.id===detailId);if(!r)return;
-  const v=!r.is_favorite;
-  await sb.from('recipes').update({is_favorite:v}).eq('id',detailId);
-  r.is_favorite=v;updateDetailFavBtn(v);renderList();
-  toast(v?'❤️ Favorilere eklendi':'💔 Favorilerden çıkarıldı');
-}
-
-function updateDetailFavBtn(fav){
-  const btn=document.getElementById('detailFavBtn');
-  btn.classList.toggle('active',fav);
-  btn.querySelector('svg').setAttribute('fill',fav?'currentColor':'none');
-}
+async function toggleFav(e,id){e.stopPropagation();const r=recipes.find(r=>r.id===id);if(!r)return;const v=!r.is_favorite;await sb.from('recipes').update({is_favorite:v}).eq('id',id);r.is_favorite=v;renderList();toast(v?'❤️ Favorilere eklendi':'💔 Favorilerden çıkarıldı');}
+async function toggleFavDetail(){const r=recipes.find(r=>r.id===detailId);if(!r)return;const v=!r.is_favorite;await sb.from('recipes').update({is_favorite:v}).eq('id',detailId);r.is_favorite=v;updateDetailFavBtn(v);renderList();toast(v?'❤️ Favorilere eklendi':'💔 Favorilerden çıkarıldı');}
+function updateDetailFavBtn(fav){const btn=document.getElementById('detailFavBtn');btn.classList.toggle('active',fav);btn.querySelector('svg').setAttribute('fill',fav?'currentColor':'none');}
 
 // ── DELETE ──
 async function deleteRecipe(e,id){
   e.stopPropagation();
   const r=recipes.find(r=>r.id===id);
-  if(!isAdmin && r&&r.added_by&&r.added_by!==userName){toast('⚠️ Sadece kendi tariflerinizi silebilirsiniz');return;}
+  if(!canEdit(r)){toast('⚠️ Sadece kendi tariflerinizi silebilirsiniz');return;}
   if(!confirm('Bu tarifi silmek istediğinizden emin misiniz?'))return;
   const {error}=await sb.from('recipes').delete().eq('id',id);
   if(error){toast('⚠️ Silinemedi');return;}
-  recipes=recipes.filter(r=>r.id!==id);
-  updateCounts();updateTagsBar();renderList();toast('🗑 Tarif silindi');
+  recipes=recipes.filter(r=>r.id!==id);updateCounts();updateTagsBar();renderList();toast('🗑 Tarif silindi');
 }
 
 // ── FORM ──
@@ -927,16 +942,9 @@ function openEditModal(id){
   document.getElementById('fServ').value=r.servings||'';
   document.getElementById('fSteps').value=r.steps||'';
   document.getElementById('fNote').value=r.note||'';
-  // Kategori
   const catOpts=Array.from(document.getElementById('fCat').options).map(o=>o.value);
-  if(catOpts.includes(r.category)){
-    document.getElementById('fCat').value=r.category;
-    document.getElementById('fCatCustom').style.display='none';
-  } else {
-    document.getElementById('fCat').value='__custom__';
-    document.getElementById('fCatCustom').value=r.category;
-    document.getElementById('fCatCustom').style.display='block';
-  }
+  if(catOpts.includes(r.category)){document.getElementById('fCat').value=r.category;document.getElementById('fCatCustom').style.display='none';}
+  else{document.getElementById('fCat').value='__custom__';document.getElementById('fCatCustom').value=r.category;document.getElementById('fCatCustom').style.display='block';}
   document.getElementById('ingList').innerHTML='';
   (r.ingredients||[]).forEach(i=>addIngField(i));
   if(!(r.ingredients&&r.ingredients.length))addIngField('');
@@ -960,28 +968,11 @@ async function saveRecipe(){
   const tagTxt=document.getElementById('tagTxt');
   if(tagTxt&&tagTxt.value.trim()&&!formTags.includes(tagTxt.value.trim()))formTags.push(tagTxt.value.trim());
   const ings=Array.from(document.querySelectorAll('#ingList .form-input')).map(i=>i.value.trim()).filter(Boolean);
-  const btn=document.getElementById('saveBtn');
-  btn.disabled=true;btn.textContent='⏳ Kaydediliyor...';
-  const payload={
-    name, category:getSelectedCategory(),
-    emoji:document.getElementById('fEmoji').value.trim()||null,
-    time_minutes:parseInt(document.getElementById('fTime').value)||null,
-    servings:parseInt(document.getElementById('fServ').value)||null,
-    ingredients:ings,
-    steps:document.getElementById('fSteps').value.trim()||null,
-    note:document.getElementById('fNote').value.trim()||null,
-    tags:formTags,
-    added_by:userName,
-  };
+  const btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='⏳ Kaydediliyor...';
+  const payload={name,category:getSelectedCategory(),emoji:document.getElementById('fEmoji').value.trim()||null,time_minutes:parseInt(document.getElementById('fTime').value)||null,servings:parseInt(document.getElementById('fServ').value)||null,ingredients:ings,steps:document.getElementById('fSteps').value.trim()||null,note:document.getElementById('fNote').value.trim()||null,tags:formTags,added_by:currentUser.name};
   let error;
-  if(editingId){
-    ({error}=await sb.from('recipes').update(payload).eq('id',editingId));
-    if(!error){const idx=recipes.findIndex(r=>r.id===editingId);if(idx>-1)recipes[idx]={...recipes[idx],...payload};}
-  } else {
-    payload.is_favorite=false;
-    const {data,error:e}=await sb.from('recipes').insert(payload).select().single();
-    error=e;if(!error&&data)recipes.unshift(data);
-  }
+  if(editingId){({error}=await sb.from('recipes').update(payload).eq('id',editingId));if(!error){const idx=recipes.findIndex(r=>r.id===editingId);if(idx>-1)recipes[idx]={...recipes[idx],...payload};}}
+  else{payload.is_favorite=false;const {data,error:e}=await sb.from('recipes').insert(payload).select().single();error=e;if(!error&&data)recipes.unshift(data);}
   btn.disabled=false;btn.textContent='💾 Kaydet';
   if(error){toast('⚠️ Kaydedilemedi: '+error.message);return;}
   closeModal();updateCounts();updateTagsBar();renderList();
@@ -994,8 +985,7 @@ function openDetail(id){
   detailId=id;updateDetailFavBtn(r.is_favorite);
   const steps=(r.steps||'').split('\n').filter(Boolean);
   const tags=(r.tags||[]).map(t=>`<span class="recipe-etag">#${esc(t)}</span>`).join('');
-  const isOwner=!r.added_by||r.added_by===userName;
-  document.getElementById('detailEditBtn').style.display=(isOwner||isAdmin)?'':'none';
+  document.getElementById('detailEditBtn').style.display=canEdit(r)?'':'none';
   document.getElementById('detailContent').innerHTML=`
     <div class="detail-hero">
       <div class="detail-emoji">${r.emoji||catEmoji[r.category]||'🍴'}</div>
@@ -1042,14 +1032,13 @@ function printRecipe(){
 
 // ── RANDOM ──
 function openRandom(){
-  const filtered=getFiltered();
-  if(!filtered.length){toast('⚠️ Gösterilecek tarif yok');return;}
+  const filtered=getFiltered();if(!filtered.length){toast('⚠️ Gösterilecek tarif yok');return;}
   const r=filtered[Math.floor(Math.random()*filtered.length)];
   document.getElementById('randomContent').innerHTML=`
     <div class="random-card">
       <div class="random-emoji">${r.emoji||catEmoji[r.category]||'🍴'}</div>
       <div class="random-title">${esc(r.name)}</div>
-      <div class="random-meta">${esc(r.category)}${r.time_minutes?' · ⏱ '+r.time_minutes+' dk':''}${r.servings?' · 👤 '+r.servings+' kişi':''}${r.added_by?' · 👤 '+esc(r.added_by):''}</div>
+      <div class="random-meta">${esc(r.category)}${r.time_minutes?' · ⏱ '+r.time_minutes+' dk':''}${r.added_by?' · 👤 '+esc(r.added_by):''}</div>
       <div class="random-btns">
         <button onclick="openRandom()">🎲 Tekrar</button>
         <button class="primary" onclick="closeRandom();setTimeout(()=>openDetail('${r.id}'),200)">Tarifi Gör →</button>
@@ -1061,8 +1050,6 @@ function closeRandom(){document.getElementById('randomOverlay').classList.remove
 function handleRandomOverlay(e){if(e.target===document.getElementById('randomOverlay'))closeRandom();}
 
 // ── IMPORT ──
-let importList2=[];
-
 function closeImport(){document.getElementById('importOverlay').classList.remove('open');}
 function handleImportOverlay(e){if(e.target===document.getElementById('importOverlay'))closeImport();}
 
@@ -1072,48 +1059,24 @@ async function handleFileImport(event){
   document.getElementById('importBody').innerHTML=`<div class="imp-progress"><div class="big">⏳</div><p>Dosya okunuyor...</p></div>`;
   document.getElementById('importOverlay').classList.add('open');
   try{
-    let text='';
-    const name=file.name.toLowerCase();
+    let text='';const name=file.name.toLowerCase();
     if(name.endsWith('.html')||name.endsWith('.htm'))text=await extractHtmlText(file);
     else if(name.endsWith('.pdf'))text=await extractPdfText(file);
     else{document.getElementById('importBody').innerHTML=`<div class="imp-progress"><div class="big">😕</div><p>Desteklenmeyen dosya türü.</p></div>`;return;}
     if(!text||text.trim().length<30){document.getElementById('importBody').innerHTML=`<div class="imp-progress"><div class="big">😕</div><p>Dosyadan metin okunamadı.</p></div>`;return;}
     importList2=parseRecipesFromText(text);
-    if(!importList2.length){document.getElementById('importBody').innerHTML=`<div class="imp-progress"><div class="big">🤔</div><p>Tarif formatı tanınamadı.<br>"01) Tarif Adı" formatı gereklidir.</p></div>`;return;}
+    if(!importList2.length){document.getElementById('importBody').innerHTML=`<div class="imp-progress"><div class="big">🤔</div><p>Tarif formatı tanınamadı.</p></div>`;return;}
     renderImportList();
   }catch(err){document.getElementById('importBody').innerHTML=`<div class="imp-progress"><div class="big">⚠️</div><p>Hata: ${esc(err.message)}</p></div>`;}
 }
 
-async function extractHtmlText(file){
-  const html=await file.text();
-  const doc=new DOMParser().parseFromString(html,'text/html');
-  doc.querySelectorAll('br').forEach(br=>br.replaceWith('\n'));
-  doc.querySelectorAll('p,div,h1,h2,h3,h4,li,tr').forEach(el=>el.insertAdjacentText('afterend','\n'));
-  return doc.body?doc.body.innerText||doc.body.textContent:doc.documentElement.textContent;
-}
-
-async function extractPdfText(file){
-  if(!window.pdfjsLib){
-    await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  }
-  const ab=await file.arrayBuffer();
-  const pdf=await pdfjsLib.getDocument({data:ab}).promise;
-  let txt='';
-  for(let i=1;i<=pdf.numPages;i++){const pg=await pdf.getPage(i);const c=await pg.getTextContent();txt+=c.items.map(x=>x.str).join(' ')+'\n';}
-  return txt;
-}
+async function extractHtmlText(file){const html=await file.text();const doc=new DOMParser().parseFromString(html,'text/html');doc.querySelectorAll('br').forEach(br=>br.replaceWith('\n'));doc.querySelectorAll('p,div,h1,h2,h3,h4,li,tr').forEach(el=>el.insertAdjacentText('afterend','\n'));return doc.body?doc.body.innerText||doc.body.textContent:doc.documentElement.textContent;}
+async function extractPdfText(file){if(!window.pdfjsLib){await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}const ab=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:ab}).promise;let txt='';for(let i=1;i<=pdf.numPages;i++){const pg=await pdf.getPage(i);const c=await pg.getTextContent();txt+=c.items.map(x=>x.str).join(' ')+'\n';}return txt;}
 
 function parseRecipesFromText(rawText){
-  const results=[];
-  const lines=rawText.split(/\n/).map(l=>l.trim()).filter(Boolean);
-  const titleRe=/^(\d{1,3})[\)\.]\s*(.+)/;
-  let blocks=[],current=null;
-  for(const line of lines){
-    const m=line.match(titleRe);
-    if(m){if(current)blocks.push(current);current={title:m[2].trim(),lines:[]};}
-    else if(current)current.lines.push(line);
-  }
+  const results=[];const lines=rawText.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  const titleRe=/^(\d{1,3})[\)\.]\s*(.+)/;let blocks=[],current=null;
+  for(const line of lines){const m=line.match(titleRe);if(m){if(current)blocks.push(current);current={title:m[2].trim(),lines:[]};}else if(current)current.lines.push(line);}
   if(current)blocks.push(current);
   for(const block of blocks){
     let ingredients=[],stepsArr=[],noteArr=[],time_minutes=null,servings=null,mode='';
@@ -1121,10 +1084,8 @@ function parseRecipesFromText(rawText){
       if(/^malzeme/i.test(line)||/^içindekiler/i.test(line)){mode='ing';continue;}
       if(/^yapılı|^hazırlanı/i.test(line)){mode='steps';continue;}
       if(/^not:/i.test(line)){mode='note';noteArr.push(line.replace(/^not:\s*/i,'').trim());continue;}
-      const tm=line.match(/(\d+)\s*(dakika|dk\.?|saat)/i);
-      if(tm)time_minutes=parseInt(tm[1])*(/saat/i.test(tm[2])?60:1);
-      const sm=line.match(/(\d+)\s*(kişi|porsiyon|kişilik)/i);
-      if(sm)servings=parseInt(sm[1]);
+      const tm=line.match(/(\d+)\s*(dakika|dk\.?|saat)/i);if(tm)time_minutes=parseInt(tm[1])*(/saat/i.test(tm[2])?60:1);
+      const sm=line.match(/(\d+)\s*(kişi|porsiyon|kişilik)/i);if(sm)servings=parseInt(sm[1]);
       if(mode==='ing'){const parts=line.replace(/\.\s*$/,'').split(',').map(s=>s.trim()).filter(s=>s.length>0);ingredients.push(...parts);}
       else if(mode==='steps')stepsArr.push(line);
       else if(mode==='note')noteArr.push(line);
@@ -1133,50 +1094,20 @@ function parseRecipesFromText(rawText){
     const sents=raw.split(/(?<=[.!?])\s+(?=[A-ZÇĞİÖŞÜİa-zçğışöü])/).map(s=>s.trim()).filter(s=>s.length>3);
     const stepsText=sents.map((s,i)=>`${i+1}. ${s.endsWith('.')?s:s+'.'}`).join('\n');
     if(block.title.length>1&&(ingredients.length>0||stepsText.length>0)){
-      results.push({name:block.title,category:guessCategory(block.title+' '+ingredients.join(' ')),emoji:guessEmoji(block.title),time_minutes,servings,ingredients,steps:stepsText,note:noteArr.join(' ').trim()||null,tags:[],is_favorite:false,added_by:userName});
+      results.push({name:block.title,category:guessCategory(block.title+' '+ingredients.join(' ')),emoji:guessEmoji(block.title),time_minutes,servings,ingredients,steps:stepsText,note:noteArr.join(' ').trim()||null,tags:[],is_favorite:false,added_by:currentUser?.name||''});
     }
   }
   return results;
 }
 
-function guessCategory(t){
-  t=t.toLowerCase();
-  if(/çorba/.test(t))return'Çorba';if(/salata/.test(t))return'Salata';
-  if(/tatlı|pasta|kek|kurabiye|baklava|kadayıf|sütlaç/.test(t))return'Tatlı & Pasta';
-  if(/kahvaltı|omlet|yumurta|reçel/.test(t))return'Sabah Kahvaltısı';
-  if(/börek|poğaça|mantı|gözleme|hamur/.test(t))return'Börek & Hamur İşleri';
-  if(/pilav|makarna/.test(t))return'Pilav & Makarna';
-  if(/fasulye|nohut|mercimek|barbunya/.test(t))return'Baklagiller';
-  if(/turşu|konserve/.test(t))return'Turşu & Konserve';
-  if(/tavuk|piliç/.test(t))return'Tavuk Yemekleri';
-  if(/balık|karides|midye/.test(t))return'Balık & Deniz Ürünleri';
-  if(/zeytinyağlı|dolma|sarma|enginar/.test(t))return'Zeytinyağlılar';
-  if(/köfte|kebap|kavurma|kuzu|dana/.test(t))return'Etli Yemekler';
-  if(/sebze|güveç|türlü|patlıcan|kabak/.test(t))return'Sebze Yemekleri';
-  if(/çay|kahve|şerbet|limonata/.test(t))return'İçecek';
-  return'Diğer';
-}
-function guessEmoji(n){
-  n=n.toLowerCase();
-  if(/çorba/.test(n))return'🍜';if(/pilav/.test(n))return'🍚';if(/köfte/.test(n))return'🥩';
-  if(/kebap/.test(n))return'🍢';if(/salata/.test(n))return'🥗';if(/tatlı|pasta|kek/.test(n))return'🍰';
-  if(/baklava/.test(n))return'🍯';if(/tavuk/.test(n))return'🍗';if(/balık/.test(n))return'🐟';
-  if(/makarna/.test(n))return'🍝';if(/börek/.test(n))return'🥐';if(/kahve/.test(n))return'☕';
-  if(/çay/.test(n))return'🍵';if(/dolma|sarma/.test(n))return'🌿';return'🍽';
-}
+function guessCategory(t){t=t.toLowerCase();if(/çorba/.test(t))return'Çorba';if(/salata/.test(t))return'Salata';if(/tatlı|pasta|kek|kurabiye|baklava|kadayıf|sütlaç/.test(t))return'Tatlı & Pasta';if(/kahvaltı|omlet|yumurta|reçel/.test(t))return'Sabah Kahvaltısı';if(/börek|poğaça|mantı|gözleme|hamur/.test(t))return'Börek & Hamur İşleri';if(/pilav|makarna/.test(t))return'Pilav & Makarna';if(/fasulye|nohut|mercimek|barbunya/.test(t))return'Baklagiller';if(/turşu|konserve/.test(t))return'Turşu & Konserve';if(/tavuk|piliç/.test(t))return'Tavuk Yemekleri';if(/balık|karides|midye/.test(t))return'Balık & Deniz Ürünleri';if(/zeytinyağlı|dolma|sarma|enginar/.test(t))return'Zeytinyağlılar';if(/köfte|kebap|kavurma|kuzu|dana/.test(t))return'Etli Yemekler';if(/sebze|güveç|türlü|patlıcan|kabak/.test(t))return'Sebze Yemekleri';if(/çay|kahve|şerbet|limonata/.test(t))return'İçecek';return'Diğer';}
+function guessEmoji(n){n=n.toLowerCase();if(/çorba/.test(n))return'🍜';if(/pilav/.test(n))return'🍚';if(/köfte/.test(n))return'🥩';if(/kebap/.test(n))return'🍢';if(/salata/.test(n))return'🥗';if(/tatlı|pasta|kek/.test(n))return'🍰';if(/baklava/.test(n))return'🍯';if(/tavuk/.test(n))return'🍗';if(/balık/.test(n))return'🐟';if(/makarna/.test(n))return'🍝';if(/börek/.test(n))return'🥐';if(/kahve/.test(n))return'☕';if(/çay/.test(n))return'🍵';if(/dolma|sarma/.test(n))return'🌿';return'🍽';}
 
 function renderImportList(){
   document.getElementById('importTitle').textContent=`📄 ${importList2.length} Tarif Bulundu`;
   document.getElementById('importBody').innerHTML=`
     <p style="font-size:12px;color:var(--text3);margin-bottom:12px;">Aktarmak istediğiniz tarifleri seçin:</p>
-    <div>${importList2.map((r,idx)=>`
-      <div class="imp-item">
-        <label class="imp-check">
-          <input type="checkbox" id="ic_${idx}" checked />
-          <div><div class="imp-title">${r.emoji} ${esc(r.name)}</div>
-          <div class="imp-meta">${r.category}${r.time_minutes?' · ⏱ '+r.time_minutes+' dk':''}${r.ingredients.length?' · '+r.ingredients.length+' malzeme':''}</div></div>
-        </label>
-      </div>`).join('')}</div>
+    <div>${importList2.map((r,idx)=>`<div class="imp-item"><label class="imp-check"><input type="checkbox" id="ic_${idx}" checked /><div><div class="imp-title">${r.emoji} ${esc(r.name)}</div><div class="imp-meta">${r.category}${r.time_minutes?' · ⏱ '+r.time_minutes+' dk':''}${r.ingredients.length?' · '+r.ingredients.length+' malzeme':''}</div></div></label></div>`).join('')}</div>
     <button class="btn-import" id="importBtn" onclick="doImport()">✅ Seçilenleri Aktar</button>`;
 }
 
@@ -1186,10 +1117,7 @@ async function doImport(){
   if(!selected.length){toast('⚠️ En az bir tarif seçin');return;}
   btn.disabled=true;btn.textContent=`⏳ ${selected.length} tarif aktarılıyor...`;
   let ok=0;
-  for(const r of selected){
-    const {data,error}=await sb.from('recipes').insert({...r,added_by:userName}).select().single();
-    if(!error&&data){recipes.unshift(data);ok++;}
-  }
+  for(const r of selected){const {data,error}=await sb.from('recipes').insert({...r,added_by:currentUser?.name||''}).select().single();if(!error&&data){recipes.unshift(data);ok++;}}
   closeImport();updateCounts();updateTagsBar();renderList();
   toast(`✅ ${ok} tarif başarıyla aktarıldı!`);
 }
@@ -1198,10 +1126,7 @@ async function doImport(){
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// SW kaldır
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));
-}
+if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));}
 
 init();
 </script>
