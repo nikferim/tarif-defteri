@@ -95,7 +95,6 @@
     .empty-state .big { font-size: 52px; margin-bottom: 12px; }
     .empty-state p { font-size: 15px; line-height: 1.6; }
     .recipe-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); box-shadow: var(--shadow); overflow: hidden; cursor: pointer; transition: transform 0.15s; }
-    .recipe-card img { display: block; }
     .recipe-card:active { transform: scale(0.985); }
     .recipe-card-body { padding: 14px; }
     .recipe-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
@@ -382,17 +381,6 @@
     </div>
     <div class="form-body">
       <div class="form-group"><label>Tarif Adı *</label><input class="form-input" id="fName" placeholder="örn. Mercimek Çorbası" /></div>
-      <div class="form-group">
-        <label>Fotoğraf</label>
-        <div id="photoPreview" style="display:none;margin-bottom:8px;position:relative;">
-          <img id="photoImg" src="" style="width:100%;height:180px;object-fit:cover;border-radius:12px;" />
-          <button onclick="removePhoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;">✕</button>
-        </div>
-        <label for="photoInput" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:1.5px dashed var(--border);border-radius:12px;cursor:pointer;color:var(--text3);font-size:13px;font-weight:600;text-transform:none;letter-spacing:0;">
-          📷 Fotoğraf Seç veya Çek
-        </label>
-        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoSelect(event)" />
-      </div>
       <div class="form-row">
         <div class="form-group"><label>Kategori</label>
           <select class="form-select" id="fCat" onchange="handleCatChange(this)">
@@ -546,40 +534,6 @@ const SESSION_KEY = 'tarif_session';
 let recipes=[], members=[], currentCat='', currentTag='', currentSort='new', currentPage=1;
 let editingId=null, detailId=null, currentUser=null, formTags=[], importList2=[], searchTimer=null;
 
-// ── SHA-256 HASH ──
-async function sha256(text) {
-  const msgBuffer = new TextEncoder().encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-// ── FOTOĞRAF ──
-let currentPhotoUrl = null;
-let currentPhotoFile = null;
-
-function handlePhotoSelect(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  // 5MB limit
-  if (file.size > 5 * 1024 * 1024) { toast('⚠️ Fotoğraf 5MB'dan küçük olmalıdır'); return; }
-  currentPhotoFile = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('photoImg').src = e.target.result;
-    document.getElementById('photoPreview').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
-
-function removePhoto() {
-  currentPhotoFile = null;
-  currentPhotoUrl = null;
-  document.getElementById('photoImg').src = '';
-  document.getElementById('photoPreview').style.display = 'none';
-  document.getElementById('photoInput').value = '';
-}
-
 // ── NORMALIZE ──
 function normalize(s) {
   if (!s) return '';
@@ -598,9 +552,6 @@ async function init() {
       const session = JSON.parse(raw);
       if (session && session.name && session.exp > Date.now()) {
         currentUser = session;
-        // Session'ı her girişte 24 saat uzat
-        currentUser.exp = Date.now() + 24*60*60*1000;
-        localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
         document.getElementById('loadingScreen').style.display = 'none';
         showApp();
         await fetchRecipes();
@@ -658,19 +609,16 @@ async function doLogin() {
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = '⏳ Kontrol ediliyor...';
 
-  // Şifreyi hash'le
-  const hashedPass = await sha256(pass);
-
-  // Hash'lenmiş şifreyi Supabase'den kontrol et
+  // Şifreyi Supabase'den kontrol et
   const { data, error } = await sb.from('members').select('id,name,is_admin,password').eq('id', selectedMemberId).single();
 
   btn.disabled = false; btn.textContent = 'Giriş Yap →';
 
   if (error || !data) { showLoginError('Bir hata oluştu, tekrar deneyin.'); return; }
-  if (data.password !== hashedPass) { showLoginError('❌ Şifre hatalı, tekrar deneyin.'); document.getElementById('passInput').value=''; document.getElementById('passInput').focus(); return; }
+  if (data.password !== pass) { showLoginError('❌ Şifre hatalı, tekrar deneyin.'); document.getElementById('passInput').value=''; document.getElementById('passInput').focus(); return; }
 
   // Giriş başarılı — session kaydet (8 saatlik)
-  currentUser = { id: data.id, name: data.name, isAdmin: data.is_admin, exp: Date.now() + 24*60*60*1000 };
+  currentUser = { id: data.id, name: data.name, isAdmin: data.is_admin, exp: Date.now() + 8*60*60*1000 };
   localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
 
   document.getElementById('loginScreen').style.display = 'none';
@@ -707,16 +655,12 @@ function logout() {
   localStorage.removeItem(SESSION_KEY);
   currentUser = null; recipes = [];
   selectedMemberId = null; selectedMemberName = '';
-  // Giriş ekranını sıfırla
   document.getElementById('passWrap').style.display = 'none';
-  document.getElementById('passInput').value = '';
   document.getElementById('loginBtn').disabled = true;
   document.getElementById('loginError').style.display = 'none';
   document.querySelectorAll('.member-btn').forEach(b=>b.classList.remove('selected'));
   closeProfile();
-  // Önce app'i gizle, sonra login'i göster
-  document.getElementById('appShell').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
+  showLogin();
   toast('👋 Çıkış yapıldı');
 }
 
@@ -741,7 +685,7 @@ async function renderAdminMembers() {
       <div class="admin-member-avatar ${m.is_admin?'admin':''}">${m.name[0].toUpperCase()}</div>
       <div style="flex:1">
         <div class="admin-member-name">${esc(m.name)} ${m.is_admin?'<span class="admin-member-badge">👑</span>':''}</div>
-        <div style="font-size:11px;color:var(--text3);">••••••••</div>
+        <div style="font-size:11px;color:var(--text3);">Şifre: ${esc(m.password)}</div>
       </div>
       ${!m.is_admin?`<button class="btn-del-member" onclick="deleteMember('${m.id}','${esc(m.name)}')">🗑</button>`:''}
     </div>`).join('');
@@ -751,8 +695,7 @@ async function addMember() {
   const name = document.getElementById('newMemberName').value.trim();
   const pass = document.getElementById('newMemberPass').value.trim();
   if (!name||!pass) { toast('⚠️ Ad ve şifre gereklidir'); return; }
-  const hashedPass = await sha256(pass);
-  const { error } = await sb.from('members').insert({ name, password: hashedPass, is_admin: false });
+  const { error } = await sb.from('members').insert({ name, password: pass, is_admin: false });
   if (error) { toast('⚠️ '+error.message); return; }
   document.getElementById('newMemberName').value='';
   document.getElementById('newMemberPass').value='';
@@ -848,13 +791,12 @@ function updateTagsBar(){
 // ── RENDER ──
 function canEdit(r){ return currentUser&&(currentUser.isAdmin||!r.added_by||r.added_by===currentUser.name); }
 
-function cardHTML(r,_q=''){
+function cardHTML(r){
   const tags=(r.tags||[]).map(t=>`<span class="recipe-etag">#${esc(t)}</span>`).join('');
   return`<div class="recipe-card" onclick="openDetail('${r.id}')">
-    ${r.photo_url ? `<img src="${r.photo_url}" style="width:100%;height:160px;object-fit:cover;" loading="lazy" />` : ''}
     <div class="recipe-card-body">
       <div class="recipe-card-header">
-        <div class="recipe-card-title">${r.emoji||catEmoji[r.category]||'🍴'} ${highlight(r.name,_q)} ${r.is_private?'<span style="font-size:11px;">🔒</span>':''}</div>
+        <div class="recipe-card-title">${r.emoji||catEmoji[r.category]||'🍴'} ${esc(r.name)} ${r.is_private?'<span style="font-size:11px;">🔒</span>':''}</div>
         <div class="recipe-card-actions">
           <button class="icon-btn fav ${r.is_favorite?'active':''}" onclick="toggleFav(event,'${r.id}')">
             <svg fill="${r.is_favorite?'currentColor':'none'}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -870,7 +812,7 @@ function cardHTML(r,_q=''){
         ${r.ingredients&&r.ingredients.length?`<div class="meta-item">${r.ingredients.length} malzeme</div>`:''}
         ${r.added_by?`<div class="added-by">👤 ${esc(r.added_by)}</div>`:''}
       </div>
-      ${r.steps?`<div class="recipe-card-desc">${highlight(r.steps.split('\n').filter(Boolean)[0]||'',_q)}</div>`:''}
+      ${r.steps?`<div class="recipe-card-desc">${esc(r.steps.split('\n').filter(Boolean)[0]||'')}</div>`:''}
       <div class="recipe-card-footer"><span class="recipe-tag">${esc(r.category)}</span>${tags}</div>
     </div>
   </div>`;
@@ -884,8 +826,7 @@ function renderList(){
   document.getElementById('resultsCount').textContent=total?`${total} tarif`:'';
   const list=document.getElementById('recipeList');
   if(!pageItems.length){list.innerHTML=`<div class="empty-state"><div class="big">🍳</div><p>${recipes.length===0?'Henüz tarif yok.':'Arama sonucu bulunamadı.'}</p></div>`;document.getElementById('pagination').innerHTML='';return;}
-  const _q=(document.getElementById('searchInput')?.value||'').trim();
-  list.innerHTML=pageItems.map(r=>cardHTML(r,_q)).join('');
+  list.innerHTML=pageItems.map(r=>cardHTML(r)).join('');
   renderPagination(currentPage,totalPages);
 }
 
@@ -906,7 +847,7 @@ function goPage(p){currentPage=p;renderList();window.scrollTo(0,0);}
 function renderFavs(){
   const favs=recipes.filter(r=>r.is_favorite);const list=document.getElementById('favList');
   if(!favs.length){list.innerHTML=`<div class="empty-state"><div class="big">❤️</div><p>Henüz favori tarif yok.</p></div>`;return;}
-  list.innerHTML=favs.map(r=>cardHTML(r,'')).join('');
+  list.innerHTML=favs.map(r=>cardHTML(r)).join('');
 }
 
 function renderStats(){
@@ -997,10 +938,6 @@ function openAddModal(){
   document.getElementById('fCat').value='Çorba';
   document.getElementById('fPrivate').checked=false;
   document.getElementById('fCatCustom').style.display='none';
-  document.getElementById('photoPreview').style.display='none';
-  document.getElementById('photoImg').src='';
-  document.getElementById('photoInput').value='';
-  currentPhotoUrl=null; currentPhotoFile=null;
   document.getElementById('ingList').innerHTML='';
   initTagsInput();addIngField('');addIngField('');
   document.getElementById('modalOverlay').classList.add('open');
@@ -1014,10 +951,6 @@ function openEditModal(id){
   document.getElementById('fName').value=r.name;
   document.getElementById('fEmoji').value=r.emoji||'';
   document.getElementById('fPrivate').checked=r.is_private||false;
-  currentPhotoUrl=r.photo_url||null; currentPhotoFile=null;
-  if(r.photo_url){document.getElementById('photoImg').src=r.photo_url;document.getElementById('photoPreview').style.display='block';}
-  else{document.getElementById('photoPreview').style.display='none';document.getElementById('photoImg').src='';}
-  document.getElementById('photoInput').value='';
   document.getElementById('fTime').value=r.time_minutes||'';
   document.getElementById('fServ').value=r.servings||'';
   document.getElementById('fSteps').value=r.steps||'';
@@ -1049,18 +982,7 @@ async function saveRecipe(){
   if(tagTxt&&tagTxt.value.trim()&&!formTags.includes(tagTxt.value.trim()))formTags.push(tagTxt.value.trim());
   const ings=Array.from(document.querySelectorAll('#ingList .form-input')).map(i=>i.value.trim()).filter(Boolean);
   const btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='⏳ Kaydediliyor...';
-  // Fotoğraf yükleme
-  let photoUrl = currentPhotoUrl || null;
-  if(currentPhotoFile){
-    btn.textContent='📷 Fotoğraf yükleniyor...';
-    const ext = currentPhotoFile.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-    const {data:upData, error:upErr} = await sb.storage.from('recipe-photos').upload(fileName, currentPhotoFile, {cacheControl:'3600',upsert:false});
-    if(upErr){toast('⚠️ Fotoğraf yüklenemedi: '+upErr.message);}
-    else{const {data:urlData}=sb.storage.from('recipe-photos').getPublicUrl(fileName);photoUrl=urlData.publicUrl;}
-    btn.textContent='⏳ Kaydediliyor...';
-  }
-  const payload={name,category:getSelectedCategory(),emoji:document.getElementById('fEmoji').value.trim()||null,time_minutes:parseInt(document.getElementById('fTime').value)||null,servings:parseInt(document.getElementById('fServ').value)||null,ingredients:ings,steps:document.getElementById('fSteps').value.trim()||null,note:document.getElementById('fNote').value.trim()||null,tags:formTags,added_by:currentUser.name,is_private:document.getElementById('fPrivate').checked,photo_url:photoUrl};
+  const payload={name,category:getSelectedCategory(),emoji:document.getElementById('fEmoji').value.trim()||null,time_minutes:parseInt(document.getElementById('fTime').value)||null,servings:parseInt(document.getElementById('fServ').value)||null,ingredients:ings,steps:document.getElementById('fSteps').value.trim()||null,note:document.getElementById('fNote').value.trim()||null,tags:formTags,added_by:currentUser.name,is_private:document.getElementById('fPrivate').checked};
   let error;
   if(editingId){
     const orig=recipes.find(r=>r.id===editingId);
@@ -1081,7 +1003,6 @@ function openDetail(id){
   const tags=(r.tags||[]).map(t=>`<span class="recipe-etag">#${esc(t)}</span>`).join('');
   document.getElementById('detailEditBtn').style.display=canEdit(r)?'':'none';
   document.getElementById('detailContent').innerHTML=`
-    ${r.photo_url ? `<img src="${r.photo_url}" style="width:100%;height:220px;object-fit:cover;" />` : ''}
     <div class="detail-hero">
       <div class="detail-emoji">${r.emoji||catEmoji[r.category]||'🍴'}</div>
       <div class="detail-title">${esc(r.name)} ${r.is_private?'🔒':''}</div>
@@ -1218,29 +1139,6 @@ async function doImport(){
 }
 
 // ── HELPERS ──
-function highlight(text, query) {
-  if (!text || !query) return esc(text);
-  const escaped = esc(text);
-  const nText = normalize(text);
-  const nQuery = normalize(query);
-  if (!nQuery || !nText.includes(nQuery)) return escaped;
-  // Orijinal metinde eşleşen pozisyonu bul
-  let result = '';
-  let i = 0;
-  while (i < text.length) {
-    const remaining = normalize(text.slice(i));
-    if (remaining.startsWith(nQuery)) {
-      const match = text.slice(i, i + nQuery.length);
-      result += `<mark style="background:#FFE066;color:#2A1A0E;border-radius:3px;padding:0 2px;">${esc(match)}</mark>`;
-      i += nQuery.length;
-    } else {
-      result += esc(text[i]);
-      i++;
-    }
-  }
-  return result;
-}
-
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
