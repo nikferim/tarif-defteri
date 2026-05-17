@@ -984,7 +984,10 @@ async function saveRecipe(){
   const btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='⏳ Kaydediliyor...';
   const payload={name,category:getSelectedCategory(),emoji:document.getElementById('fEmoji').value.trim()||null,time_minutes:parseInt(document.getElementById('fTime').value)||null,servings:parseInt(document.getElementById('fServ').value)||null,ingredients:ings,steps:document.getElementById('fSteps').value.trim()||null,note:document.getElementById('fNote').value.trim()||null,tags:formTags,added_by:currentUser.name,is_private:document.getElementById('fPrivate').checked};
   let error;
-  if(editingId){({error}=await sb.from('recipes').update(payload).eq('id',editingId));if(!error){const idx=recipes.findIndex(r=>r.id===editingId);if(idx>-1)recipes[idx]={...recipes[idx],...payload};}}
+  if(editingId){
+    const orig=recipes.find(r=>r.id===editingId);
+    if(orig&&orig.added_by&&orig.added_by!==currentUser.name)payload.added_by=orig.added_by;
+    ({error}=await sb.from('recipes').update(payload).eq('id',editingId));if(!error){const idx=recipes.findIndex(r=>r.id===editingId);if(idx>-1)recipes[idx]={...recipes[idx],...payload};}}
   else{payload.is_favorite=false;const {data,error:e}=await sb.from('recipes').insert(payload).select().single();error=e;if(!error&&data)recipes.unshift(data);}
   btn.disabled=false;btn.textContent='💾 Kaydet';
   if(error){toast('⚠️ Kaydedilemedi: '+error.message);return;}
