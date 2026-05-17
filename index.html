@@ -534,6 +534,14 @@ const SESSION_KEY = 'tarif_session';
 let recipes=[], members=[], currentCat='', currentTag='', currentSort='new', currentPage=1;
 let editingId=null, detailId=null, currentUser=null, formTags=[], importList2=[], searchTimer=null;
 
+// ── SHA-256 HASH ──
+async function sha256(text) {
+  const msgBuffer = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // ── NORMALIZE ──
 function normalize(s) {
   if (!s) return '';
@@ -552,6 +560,9 @@ async function init() {
       const session = JSON.parse(raw);
       if (session && session.name && session.exp > Date.now()) {
         currentUser = session;
+        // Session'ı her girişte 24 saat uzat
+        currentUser.exp = Date.now() + 24*60*60*1000;
+        localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
         document.getElementById('loadingScreen').style.display = 'none';
         showApp();
         await fetchRecipes();
@@ -609,16 +620,19 @@ async function doLogin() {
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = '⏳ Kontrol ediliyor...';
 
-  // Şifreyi Supabase'den kontrol et
+  // Şifreyi hash'le
+  const hashedPass = await sha256(pass);
+
+  // Hash'lenmiş şifreyi Supabase'den kontrol et
   const { data, error } = await sb.from('members').select('id,name,is_admin,password').eq('id', selectedMemberId).single();
 
   btn.disabled = false; btn.textContent = 'Giriş Yap →';
 
   if (error || !data) { showLoginError('Bir hata oluştu, tekrar deneyin.'); return; }
-  if (data.password !== pass) { showLoginError('❌ Şifre hatalı, tekrar deneyin.'); document.getElementById('passInput').value=''; document.getElementById('passInput').focus(); return; }
+  if (data.password !== hashedPass) { showLoginError('❌ Şifre hatalı, tekrar deneyin.'); document.getElementById('passInput').value=''; document.getElementById('passInput').focus(); return; }
 
   // Giriş başarılı — session kaydet (8 saatlik)
-  currentUser = { id: data.id, name: data.name, isAdmin: data.is_admin, exp: Date.now() + 8*60*60*1000 };
+  currentUser = { id: data.id, name: data.name, isAdmin: data.is_admin, exp: Date.now() + 24*60*60*1000 };
   localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
 
   document.getElementById('loginScreen').style.display = 'none';
@@ -685,7 +699,7 @@ async function renderAdminMembers() {
       <div class="admin-member-avatar ${m.is_admin?'admin':''}">${m.name[0].toUpperCase()}</div>
       <div style="flex:1">
         <div class="admin-member-name">${esc(m.name)} ${m.is_admin?'<span class="admin-member-badge">👑</span>':''}</div>
-        <div style="font-size:11px;color:var(--text3);">Şifre: ${esc(m.password)}</div>
+        <div style="font-size:11px;color:var(--text3);">••••••••</div>
       </div>
       ${!m.is_admin?`<button class="btn-del-member" onclick="deleteMember('${m.id}','${esc(m.name)}')">🗑</button>`:''}
     </div>`).join('');
@@ -695,7 +709,8 @@ async function addMember() {
   const name = document.getElementById('newMemberName').value.trim();
   const pass = document.getElementById('newMemberPass').value.trim();
   if (!name||!pass) { toast('⚠️ Ad ve şifre gereklidir'); return; }
-  const { error } = await sb.from('members').insert({ name, password: pass, is_admin: false });
+  const hashedPass = await sha256(pass);
+  const { error } = await sb.from('members').insert({ name, password: hashedPass, is_admin: false });
   if (error) { toast('⚠️ '+error.message); return; }
   document.getElementById('newMemberName').value='';
   document.getElementById('newMemberPass').value='';
