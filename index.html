@@ -791,12 +791,12 @@ function updateTagsBar(){
 // ── RENDER ──
 function canEdit(r){ return currentUser&&(currentUser.isAdmin||!r.added_by||r.added_by===currentUser.name); }
 
-function cardHTML(r){
+function cardHTML(r,_q=''){
   const tags=(r.tags||[]).map(t=>`<span class="recipe-etag">#${esc(t)}</span>`).join('');
   return`<div class="recipe-card" onclick="openDetail('${r.id}')">
     <div class="recipe-card-body">
       <div class="recipe-card-header">
-        <div class="recipe-card-title">${r.emoji||catEmoji[r.category]||'🍴'} ${esc(r.name)} ${r.is_private?'<span style="font-size:11px;">🔒</span>':''}</div>
+        <div class="recipe-card-title">${r.emoji||catEmoji[r.category]||'🍴'} ${highlight(r.name,_q)} ${r.is_private?'<span style="font-size:11px;">🔒</span>':''}</div>
         <div class="recipe-card-actions">
           <button class="icon-btn fav ${r.is_favorite?'active':''}" onclick="toggleFav(event,'${r.id}')">
             <svg fill="${r.is_favorite?'currentColor':'none'}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -812,7 +812,7 @@ function cardHTML(r){
         ${r.ingredients&&r.ingredients.length?`<div class="meta-item">${r.ingredients.length} malzeme</div>`:''}
         ${r.added_by?`<div class="added-by">👤 ${esc(r.added_by)}</div>`:''}
       </div>
-      ${r.steps?`<div class="recipe-card-desc">${esc(r.steps.split('\n').filter(Boolean)[0]||'')}</div>`:''}
+      ${r.steps?`<div class="recipe-card-desc">${highlight(r.steps.split('\n').filter(Boolean)[0]||'',_q)}</div>`:''}
       <div class="recipe-card-footer"><span class="recipe-tag">${esc(r.category)}</span>${tags}</div>
     </div>
   </div>`;
@@ -826,7 +826,8 @@ function renderList(){
   document.getElementById('resultsCount').textContent=total?`${total} tarif`:'';
   const list=document.getElementById('recipeList');
   if(!pageItems.length){list.innerHTML=`<div class="empty-state"><div class="big">🍳</div><p>${recipes.length===0?'Henüz tarif yok.':'Arama sonucu bulunamadı.'}</p></div>`;document.getElementById('pagination').innerHTML='';return;}
-  list.innerHTML=pageItems.map(r=>cardHTML(r)).join('');
+  const _q=(document.getElementById('searchInput')?.value||'').trim();
+  list.innerHTML=pageItems.map(r=>cardHTML(r,_q)).join('');
   renderPagination(currentPage,totalPages);
 }
 
@@ -847,7 +848,7 @@ function goPage(p){currentPage=p;renderList();window.scrollTo(0,0);}
 function renderFavs(){
   const favs=recipes.filter(r=>r.is_favorite);const list=document.getElementById('favList');
   if(!favs.length){list.innerHTML=`<div class="empty-state"><div class="big">❤️</div><p>Henüz favori tarif yok.</p></div>`;return;}
-  list.innerHTML=favs.map(r=>cardHTML(r)).join('');
+  list.innerHTML=favs.map(r=>cardHTML(r,'')).join('');
 }
 
 function renderStats(){
@@ -1139,6 +1140,29 @@ async function doImport(){
 }
 
 // ── HELPERS ──
+function highlight(text, query) {
+  if (!text || !query) return esc(text);
+  const escaped = esc(text);
+  const nText = normalize(text);
+  const nQuery = normalize(query);
+  if (!nQuery || !nText.includes(nQuery)) return escaped;
+  // Orijinal metinde eşleşen pozisyonu bul
+  let result = '';
+  let i = 0;
+  while (i < text.length) {
+    const remaining = normalize(text.slice(i));
+    if (remaining.startsWith(nQuery)) {
+      const match = text.slice(i, i + nQuery.length);
+      result += `<mark style="background:#FFE066;color:#2A1A0E;border-radius:3px;padding:0 2px;">${esc(match)}</mark>`;
+      i += nQuery.length;
+    } else {
+      result += esc(text[i]);
+      i++;
+    }
+  }
+  return result;
+}
+
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
