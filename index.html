@@ -807,14 +807,15 @@ function logout() {
   localStorage.removeItem(SESSION_KEY);
   currentUser = null; recipes = [];
   selectedMemberId = null; selectedMemberName = '';
+  // Tüm modalleri kapat
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
   // Giriş ekranını sıfırla
   document.getElementById('passWrap').style.display = 'none';
   document.getElementById('passInput').value = '';
   document.getElementById('loginBtn').disabled = true;
   document.getElementById('loginError').style.display = 'none';
-  document.querySelectorAll('.member-btn').forEach(b=>b.classList.remove('selected'));
-  closeProfile();
-  // Önce app'i gizle, sonra login'i göster
+  document.querySelectorAll('.member-btn').forEach(b => b.classList.remove('selected'));
+  // Ekran geçişi
   document.getElementById('appShell').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   toast('👋 Çıkış yapıldı');
