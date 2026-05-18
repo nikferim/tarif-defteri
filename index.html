@@ -499,6 +499,8 @@
       <button class="btn-save" onclick="addMember()" style="margin-bottom:24px;">➕ Üye Ekle</button>
       <div class="section-title">Mevcut Üyeler</div>
       <div id="adminMemberList"></div>
+      <div class="section-title" style="margin-top:24px;">Çöp Kutusu</div>
+      <div id="trashList"></div>
     </div>
   </div>
 </div>
@@ -743,9 +745,46 @@ function handleProfileOverlay(e) { if(e.target===document.getElementById('profil
 async function openAdminPanel() {
   document.getElementById('adminOverlay').classList.add('open');
   await renderAdminMembers();
+  await renderTrash();
 }
 function closeAdminPanel() { document.getElementById('adminOverlay').classList.remove('open'); }
 function handleAdminOverlay(e) { if(e.target===document.getElementById('adminOverlay')) closeAdminPanel(); }
+
+async function renderTrash() {
+  const list = document.getElementById('trashList');
+  if (!list) return;
+  list.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0;">⏳ Yükleniyor...</div>';
+  const { data } = await sb.from('recipes').select('id,name,category,added_by,deleted_at').not('deleted_at','is',null).order('deleted_at',{ascending:false});
+  if (!data || !data.length) {
+    list.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0;">Çöp kutusu boş.</div>';
+    return;
+  }
+  list.innerHTML = data.map(r => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:600;">${esc(r.name)}</div>
+        <div style="font-size:11px;color:var(--text3);">${esc(r.category)}${r.added_by?' · '+esc(r.added_by):''}</div>
+      </div>
+      <button onclick="restoreRecipe('${r.id}')" style="background:var(--green-bg);color:var(--green);border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;">↩ Geri Al</button>
+      <button onclick="permanentDelete('${r.id}')" style="background:#FEE;color:#C00;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;">🗑 Sil</button>
+    </div>`).join('');
+}
+
+async function restoreRecipe(id) {
+  const { error } = await sb.from('recipes').update({ deleted_at: null }).eq('id', id);
+  if (error) { toast('⚠️ Geri alınamadı'); return; }
+  await fetchRecipes();
+  await renderTrash();
+  toast('✅ Tarif geri alındı!');
+}
+
+async function permanentDelete(id) {
+  if (!confirm('Bu tarif kalıcı olarak silinecek, geri alınamaz!')) return;
+  const { error } = await sb.from('recipes').delete().eq('id', id);
+  if (error) { toast('⚠️ Silinemedi'); return; }
+  await renderTrash();
+  toast('🗑 Tarif kalıcı olarak silindi');
+}
 
 async function renderAdminMembers() {
   const { data } = await sb.from('members').select('*').order('is_admin',{ascending:false}).order('name');
@@ -787,7 +826,7 @@ async function deleteMember(id, name) {
 
 // ── DATA ──
 async function fetchRecipes() {
-  const { data, error } = await sb.from('recipes').select('*').order('created_at',{ascending:false});
+  const { data, error } = await sb.from('recipes').select('*').is('deleted_at', null).order('created_at',{ascending:false});
   if (error) { toast('⚠️ Veriler yüklenemedi'); return; }
   recipes = data||[];
   updateCounts(); updateTagsBar(); renderList();
@@ -998,10 +1037,11 @@ async function deleteRecipe(e,id){
   e.stopPropagation();
   const r=recipes.find(r=>r.id===id);
   if(!canEdit(r)){toast('⚠️ Sadece kendi tariflerinizi silebilirsiniz');return;}
-  if(!confirm('Bu tarifi silmek istediğinizden emin misiniz?'))return;
-  const {error}=await sb.from('recipes').delete().eq('id',id);
+  if(!confirm('Bu tarifi çöp kutusuna taşımak istediğinizden emin misiniz?'))return;
+  const {error}=await sb.from('recipes').update({deleted_at: new Date().toISOString()}).eq('id',id);
   if(error){toast('⚠️ Silinemedi');return;}
-  recipes=recipes.filter(r=>r.id!==id);updateCounts();updateTagsBar();renderList();toast('🗑 Tarif silindi');
+  recipes=recipes.filter(r=>r.id!==id);updateCounts();updateTagsBar();renderList();
+  toast('🗑 Tarif çöp kutusuna taşındı');
 }
 
 // ── FORM ──
