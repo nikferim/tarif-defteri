@@ -455,6 +455,7 @@
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         </button>
         <button class="icon-btn" onclick="addToShop()">🛒</button>
+        <button class="icon-btn" onclick="shareRecipe()" title="Paylaş">🔗</button>
         <button class="icon-btn" onclick="printRecipe()">🖨</button>
         <button class="icon-btn" id="detailEditBtn" onclick="editFromDetail()">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -608,6 +609,10 @@ function normalize(s) {
 
 // ── INIT ──
 async function init() {
+  // URL'de tarif parametresi var mı? (?tarif=uuid)
+  const urlParams = new URLSearchParams(location.search);
+  const sharedId = urlParams.get('tarif');
+
   // Session kontrolü
   try {
     const raw = localStorage.getItem(SESSION_KEY);
@@ -621,15 +626,84 @@ async function init() {
         document.getElementById('loadingScreen').style.display = 'none';
         showApp();
         await fetchRecipes();
+        // Paylaşılan tarif varsa aç
+        if (sharedId) {
+          setTimeout(() => {
+            const r = recipes.find(r => r.id === sharedId);
+            if (r) openDetail(sharedId);
+          }, 500);
+        }
         return;
       }
     }
   } catch(e) {}
 
+  // Paylaşılan tarif linki varsa giriş yapmadan göster
+  if (sharedId) {
+    await loadSharedRecipe(sharedId);
+    return;
+  }
+
   // Session yoksa üyeleri yükle ve giriş ekranını göster
   await loadMembers();
   document.getElementById('loadingScreen').style.display = 'none';
   showLogin();
+}
+
+async function loadSharedRecipe(id) {
+  // Tarifi Supabase'den çek
+  const { data, error } = await sb.from('recipes').select('*').eq('id', id).is('deleted_at', null).single();
+  document.getElementById('loadingScreen').style.display = 'none';
+
+  if (error || !data) {
+    // Tarif bulunamadı - giriş ekranına git
+    await loadMembers();
+    showLogin();
+    toast('⚠️ Tarif bulunamadı veya silinmiş');
+    return;
+  }
+
+  // Tarifi göster (giriş yapmadan, salt okunur)
+  const r = data;
+  const steps = (r.steps || '').split('
+').filter(Boolean);
+  const tags = (r.tags || []).map(t => `<span class="recipe-etag">#${esc(t)}</span>`).join('');
+
+  document.body.innerHTML = `
+    <div style="max-width:600px;margin:0 auto;padding:0 0 40px;font-family:'Nunito',sans-serif;">
+      <div style="background:#E85D26;padding:16px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;color:#fff;font-weight:700;">🍽 Aile Tarif Defteri</div>
+        <a href="${location.origin}${location.pathname}" style="background:rgba(255,255,255,0.2);color:#fff;padding:8px 14px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;">Giriş Yap →</a>
+      </div>
+      ${r.photo_url ? `<div style="width:100%;height:200px;background:#FDF0E8;overflow:hidden;display:flex;align-items:center;justify-content:center;"><img src="${r.photo_url}" style="width:100%;height:100%;object-fit:contain;" /></div>` : ''}
+      <div style="background:linear-gradient(135deg,#FFF0E6,#FDE8D4);padding:24px 20px;text-align:center;">
+        <div style="font-size:56px;margin-bottom:10px;">${r.emoji || '🍽'}</div>
+        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#2A1A0E;margin-bottom:8px;">${esc(r.name)}</div>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-bottom:8px;">
+          <span style="padding:3px 10px;background:#FFF0E6;color:#C04A1B;border-radius:50px;font-size:11px;font-weight:700;">${esc(r.category)}</span>${tags}
+        </div>
+        ${r.added_by ? `<div style="font-size:12px;color:#B89B85;font-style:italic;">👤 ${esc(r.added_by)} tarafından eklendi</div>` : ''}
+        <div style="display:flex;justify-content:center;gap:20px;margin-top:12px;flex-wrap:wrap;">
+          ${r.time_minutes ? `<div style="text-align:center;"><div style="font-size:15px;font-weight:700;">⏱ ${r.time_minutes} dk</div><div style="font-size:10px;color:#B89B85;text-transform:uppercase;">Süre</div></div>` : ''}
+          ${r.servings ? `<div style="text-align:center;"><div style="font-size:15px;font-weight:700;">👤 ${r.servings} kişi</div><div style="font-size:10px;color:#B89B85;text-transform:uppercase;">Porsiyon</div></div>` : ''}
+          ${r.ingredients && r.ingredients.length ? `<div style="text-align:center;"><div style="font-size:15px;font-weight:700;">${r.ingredients.length}</div><div style="font-size:10px;color:#B89B85;text-transform:uppercase;">Malzeme</div></div>` : ''}
+        </div>
+      </div>
+      <div style="padding:20px;">
+        ${r.ingredients && r.ingredients.length ? `
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#2A1A0E;margin-bottom:12px;padding-bottom:8px;border-bottom:1.5px solid #EDE4D8;">Malzemeler</div>
+          <div style="margin-bottom:20px;">${r.ingredients.map(i => `<span style="display:inline-flex;padding:6px 12px;background:#FDF8F3;border:1.5px solid #EDE4D8;border-radius:50px;font-size:13px;margin:0 5px 7px 0;">✓ ${esc(i)}</span>`).join('')}</div>` : ''}
+        ${steps.length ? `
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#2A1A0E;margin-bottom:12px;padding-bottom:8px;border-bottom:1.5px solid #EDE4D8;">Yapılışı</div>
+          <ol style="list-style:none;padding:0;">
+            ${steps.map((s, i) => `<li style="display:flex;gap:12px;margin-bottom:15px;">
+              <div style="flex-shrink:0;width:30px;height:30px;background:#E85D26;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">${i+1}</div>
+              <div style="font-size:14px;color:#7A5C44;line-height:1.6;padding-top:4px;">${esc(s.replace(/^\d+[\.\)]\s*/, ''))}</div>
+            </li>`).join('')}
+          </ol>` : ''}
+        ${r.note ? `<div style="background:#E6F5EC;border-left:3px solid #2D7A4F;border-radius:0 12px 12px 0;padding:12px 14px;font-size:13px;color:#2D7A4F;line-height:1.6;">💡 ${esc(r.note)}</div>` : ''}
+      </div>
+    </div>`;
 }
 
 // ── ÜYELERİ YÜKLE ──
@@ -905,7 +979,7 @@ function canEdit(r){ return currentUser&&(currentUser.isAdmin||!r.added_by||r.ad
 function cardHTML(r,_q=''){
   const tags=(r.tags||[]).map(t=>`<span class="recipe-etag">#${esc(t)}</span>`).join('');
   return`<div class="recipe-card" onclick="openDetail('${r.id}')">
-    ${r.photo_url ? `<div style="width:100%;height:180px;background:#FDF0E8;overflow:hidden;display:flex;align-items:center;justify-content:center;"><img src="${r.photo_url}" style="width:100%;height:100%;object-fit:contain;" loading="lazy" /></div>` : ''}
+    ${r.photo_url ? `<div style="width:100%;height:140px;background:#FDF0E8;overflow:hidden;display:flex;align-items:center;justify-content:center;"><img src="${r.photo_url}" style="width:100%;height:100%;object-fit:contain;" loading="lazy" /></div>` : ''}
     <div class="recipe-card-body">
       <div class="recipe-card-header">
         <div class="recipe-card-title">${r.emoji||catEmoji[r.category]||'🍴'} ${highlight(r.name,_q)} ${r.is_private?'<span style="font-size:11px;">🔒</span>':''}</div>
@@ -1136,7 +1210,7 @@ function openDetail(id){
   const tags=(r.tags||[]).map(t=>`<span class="recipe-etag">#${esc(t)}</span>`).join('');
   document.getElementById('detailEditBtn').style.display=canEdit(r)?'':'none';
   document.getElementById('detailContent').innerHTML=`
-    ${r.photo_url ? `<div style="width:100%;height:260px;background:#FDF0E8;overflow:hidden;display:flex;align-items:center;justify-content:center;"><img src="${r.photo_url}" style="width:100%;height:100%;object-fit:contain;" /></div>` : ''}
+    ${r.photo_url ? `<div style="width:100%;height:200px;background:#FDF0E8;overflow:hidden;display:flex;align-items:center;justify-content:center;"><img src="${r.photo_url}" style="width:100%;height:100%;object-fit:contain;" /></div>` : ''}
     <div class="detail-hero">
       <div class="detail-emoji">${r.emoji||catEmoji[r.category]||'🍴'}</div>
       <div class="detail-title">${esc(r.name)} ${r.is_private?'🔒':''}</div>
@@ -1159,6 +1233,30 @@ function openDetail(id){
 function closeDetail(){document.getElementById('detailOverlay').classList.remove('open');}
 function handleDetailOverlay(e){if(e.target===document.getElementById('detailOverlay'))closeDetail();}
 function editFromDetail(){closeDetail();setTimeout(()=>openEditModal(detailId),200);}
+
+// ── PAYLAŞ ──
+function shareRecipe() {
+  const r = recipes.find(r => r.id === detailId);
+  if (!r) return;
+  const url = `${location.origin}${location.pathname}?tarif=${r.id}`;
+
+  // Navigator share API varsa (mobil)
+  if (navigator.share) {
+    navigator.share({
+      title: r.name,
+      text: `${r.emoji || '🍽'} ${r.name} — Aile Tarif Defteri`,
+      url: url
+    }).catch(() => {});
+  } else {
+    // Masaüstünde panoya kopyala
+    navigator.clipboard.writeText(url).then(() => {
+      toast('🔗 Link kopyalandı!');
+    }).catch(() => {
+      // Fallback
+      prompt('Linki kopyalayın:', url);
+    });
+  }
+}
 
 // ── PRINT ──
 function printRecipe(){
