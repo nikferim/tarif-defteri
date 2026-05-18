@@ -562,7 +562,7 @@ function handlePhotoSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
   // 5MB limit
-  if (file.size > 5 * 1024 * 1024) { toast('⚠️ Fotoğraf 5MB'dan küçük olmalıdır'); return; }
+  if (file.size > 5 * 1024 * 1024) { toast('⚠️ Fotoğraf 5MB dan küçük olmalıdır'); return; }
   currentPhotoFile = file;
   const reader = new FileReader();
   reader.onload = e => {
