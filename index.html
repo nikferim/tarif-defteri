@@ -910,9 +910,27 @@ async function deleteMember(id, name) {
 
 // ── DATA ──
 async function fetchRecipes() {
+  // Çevrimdışıysa cache'den yükle
+  if (!navigator.onLine) {
+    const cached = localStorage.getItem('tarif_cache');
+    if (cached) {
+      recipes = JSON.parse(cached);
+      updateCounts(); updateTagsBar(); renderList();
+      toast('📵 Çevrimdışı — önbellekten yüklendi');
+    }
+    return;
+  }
   const { data, error } = await sb.from('recipes').select('*').is('deleted_at', null).order('created_at',{ascending:false});
-  if (error) { toast('⚠️ Veriler yüklenemedi'); return; }
+  if (error) {
+    // Hata varsa cache'den dene
+    const cached = localStorage.getItem('tarif_cache');
+    if (cached) { recipes = JSON.parse(cached); updateCounts(); updateTagsBar(); renderList(); }
+    toast('⚠️ Veriler yüklenemedi');
+    return;
+  }
   recipes = data||[];
+  // Cache'e kaydet
+  localStorage.setItem('tarif_cache', JSON.stringify(recipes));
   updateCounts(); updateTagsBar(); renderList();
 }
 
@@ -1407,7 +1425,30 @@ function highlight(text, query) {
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));}
+// Service Worker - çevrimdışı mod
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW kayıtlı:', reg.scope))
+      .catch(err => console.log('SW hatası:', err));
+  });
+}
+
+// Çevrimdışı/online durumu takip et
+window.addEventListener('online', () => {
+  document.getElementById('offlineBanner')?.remove();
+  if (currentUser) fetchRecipes();
+});
+
+window.addEventListener('offline', () => {
+  if (!document.getElementById('offlineBanner')) {
+    const banner = document.createElement('div');
+    banner.id = 'offlineBanner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#F59E0B;color:#fff;text-align:center;padding:8px;font-size:13px;font-weight:700;font-family:Nunito,sans-serif;';
+    banner.textContent = '📵 Çevrimdışı — Tarifler önbellekten gösteriliyor';
+    document.body.prepend(banner);
+  }
+});
 
 init();
 </script>
