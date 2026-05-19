@@ -264,6 +264,7 @@
     </div>
     <div class="pass-wrap" id="passWrap">
       <form onsubmit="doLogin();return false;">
+        <input type="text" id="hiddenUsername" autocomplete="username" style="display:none;" />
         <input class="pass-input" type="password" id="passInput" placeholder="Şifreniz" autocomplete="current-password" />
       </form>
     </div>
@@ -746,6 +747,7 @@ function selectMember(id, name, isAdmin) {
   document.querySelectorAll('.member-btn').forEach(b => b.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
   document.getElementById('passWrap').style.display = 'block';
+  document.getElementById('hiddenUsername').value = name;
   document.getElementById('passInput').value = '';
   document.getElementById('passInput').focus();
   document.getElementById('loginBtn').disabled = false;
