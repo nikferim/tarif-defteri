@@ -263,7 +263,9 @@
       <div class="login-loading">⏳ Üyeler yükleniyor...</div>
     </div>
     <div class="pass-wrap" id="passWrap">
-      <input class="pass-input" type="password" id="passInput" placeholder="Şifreniz" onkeydown="if(event.key==='Enter')doLogin()" />
+      <form onsubmit="doLogin();return false;">
+        <input class="pass-input" type="password" id="passInput" placeholder="Şifreniz" autocomplete="current-password" />
+      </form>
     </div>
     <div class="login-error" id="loginError"></div>
     <button class="login-btn" id="loginBtn" onclick="doLogin()" disabled>Giriş Yap →</button>
