@@ -244,6 +244,72 @@
     .screen.active { display: block; }
     .toast { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%); background: #2A1A0E; color: #fff; padding: 11px 22px; border-radius: 50px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.3s; white-space: nowrap; z-index: 999; }
     .toast.show { opacity: 1; }
+
+    /* ── DESKTOP (768px+) ── */
+    @media (min-width: 768px) {
+      body { max-width: 900px; margin: 0 auto; }
+
+      /* Topbar */
+      .topbar { padding: 16px 24px; }
+      .topbar-title { font-size: 24px; }
+
+      /* Arama */
+      .search-area { padding: 16px 24px 6px; }
+      .cats { padding: 6px 24px; }
+      .tags-bar { padding: 2px 24px 6px; }
+      .results-bar { padding: 4px 24px 0; }
+
+      /* 2 kolonlu kart listesi */
+      .recipe-list { 
+        display: grid !important; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 16px; 
+        padding: 12px 24px 100px; 
+      }
+
+      /* Kart fotoğraf yüksekliği */
+      .recipe-list > div > div[style*="height:120px"] {
+        height: 180px !important;
+      }
+
+      /* Kart başlık */
+      .recipe-card-title { font-size: 18px; }
+
+      /* Detay modal - daha geniş, ortada */
+      .modal { 
+        border-radius: 20px !important; 
+        max-width: 680px; 
+        margin: auto;
+        max-height: 88vh;
+      }
+      .modal-overlay { align-items: center !important; }
+
+      /* Detay fotoğraf */
+      .detail-hero img { height: 220px !important; }
+
+      /* Sayfalama */
+      .pagination { padding: 8px 24px 40px; }
+
+      /* Bottom nav - masaüstünde üstte */
+      .bottom-nav {
+        position: fixed;
+        top: 0; bottom: auto;
+        border-top: none;
+        border-bottom: 1.5px solid var(--border);
+        padding: 8px 0;
+        z-index: 101;
+      }
+      .topbar { top: 56px; }
+
+      /* İçerik yukarı kaymasın */
+      #screen-home { padding-top: 0; }
+
+      /* Form body daha geniş */
+      .form-body { padding: 20px 24px; }
+
+      /* Giriş ekranı */
+      .login-card { max-width: 480px; }
+    }
   </style>
 </head>
 <body>
