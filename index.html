@@ -1211,11 +1211,31 @@ async function saveRecipe(){
   if(currentPhotoFile){
     btn.textContent='📷 Fotoğraf yükleniyor...';
     const ext = currentPhotoFile.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const fileName = Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext;
     const {data:upData, error:upErr} = await sb.storage.from('recipe-photos').upload(fileName, currentPhotoFile, {cacheControl:'3600',upsert:false});
     if(upErr){toast('⚠️ Fotoğraf yüklenemedi: '+upErr.message);}
-    else{const {data:urlData}=sb.storage.from('recipe-photos').getPublicUrl(fileName);photoUrl=urlData.publicUrl;}
+    else{
+      const {data:urlData}=sb.storage.from('recipe-photos').getPublicUrl(fileName);
+      const newUrl = urlData.publicUrl;
+      // Eski fotoğrafı Storage'dan sil
+      if(currentPhotoUrl && currentPhotoUrl !== newUrl){
+        try {
+          const oldPath = currentPhotoUrl.split('/recipe-photos/')[1];
+          if(oldPath) await sb.storage.from('recipe-photos').remove([oldPath]);
+        } catch(e){}
+      }
+      photoUrl = newUrl;
+    }
     btn.textContent='⏳ Kaydediliyor...';
+  } else if(currentPhotoUrl === null && editingId) {
+    // Fotoğraf kaldırıldıysa Storage'dan da sil
+    const orig = recipes.find(r=>r.id===editingId);
+    if(orig && orig.photo_url){
+      try {
+        const oldPath = orig.photo_url.split('/recipe-photos/')[1];
+        if(oldPath) await sb.storage.from('recipe-photos').remove([oldPath]);
+      } catch(e){}
+    }
   }
   const payload={name,category:getSelectedCategory(),emoji:document.getElementById('fEmoji').value.trim()||null,time_minutes:parseInt(document.getElementById('fTime').value)||null,servings:parseInt(document.getElementById('fServ').value)||null,ingredients:ings,steps:document.getElementById('fSteps').value.trim()||null,note:document.getElementById('fNote').value.trim()||null,tags:formTags,added_by:currentUser.name,is_private:document.getElementById('fPrivate').checked,photo_url:photoUrl};
   let error;
