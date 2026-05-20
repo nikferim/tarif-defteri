@@ -987,29 +987,28 @@ async function backupCSV() {
   const { data, error } = await sb.from('recipes').select('*').is('deleted_at', null).order('created_at', { ascending: false });
   if (error) { toast('⚠️ Yedek alınamadı'); return; }
 
-  // CSV başlıkları
   const headers = ['id','name','category','emoji','time_minutes','servings','ingredients','steps','note','tags','added_by','is_favorite','is_private','photo_url','created_at'];
 
   const rows = data.map(r => headers.map(h => {
     let val = r[h];
     if (Array.isArray(val)) val = val.join(' | ');
     if (val === null || val === undefined) val = '';
-    val = String(val).replace(/"/g, '""'); // CSV escape
-    return `"${val}"`;
+    val = String(val).replace(/"/g, '""');
+    return '"' + val + '"';
   }).join(','));
 
-  const csv = '﻿' + headers.join(',') + '
-' + rows.join('
-'); // BOM for Excel
+  const bom = String.fromCharCode(0xFEFF);
+  const lines = [headers.join(',')].concat(rows);
+  const csv = bom + lines.join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const tarih = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
   a.href = url;
-  a.download = `tarif-defteri-yedek-${tarih}.csv`;
+  a.download = 'tarif-defteri-yedek-' + tarih + '.csv';
   a.click();
   URL.revokeObjectURL(url);
-  toast(`✅ ${data.length} tarif CSV olarak indirildi`);
+  toast('✅ ' + data.length + ' tarif CSV olarak indirildi');
 }
 
 async function renderTrash() {
