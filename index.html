@@ -943,12 +943,17 @@ function logout() {
   // Giriş ekranını sıfırla
   document.getElementById('passWrap').style.display = 'none';
   document.getElementById('passInput').value = '';
+  document.getElementById('hiddenUsername').value = '';
   document.getElementById('loginBtn').disabled = true;
   document.getElementById('loginError').style.display = 'none';
   document.querySelectorAll('.member-btn').forEach(b => b.classList.remove('selected'));
   // Ekran geçişi
   document.getElementById('appShell').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
+  // SW cache temizle (telefonda gerekli)
+  if ('serviceWorker' in navigator) {
+    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+  }
   toast('👋 Çıkış yapıldı');
 }
 
