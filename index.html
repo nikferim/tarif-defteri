@@ -1102,21 +1102,27 @@ async function fetchRecipes() {
     }
     return;
   }
-  const { data, error } = await sb.from('recipes').select('*').is('deleted_at', null).order('created_at',{ascending:false});
+
+  // Yönetici tüm tarifleri görür
+  // Diğer kullanıcılar: kendi gizli tarifleri + herkese açık tarifler
+  let query = sb.from('recipes').select('*').is('deleted_at', null);
+
+  if (!currentUser.isAdmin) {
+    // is_private=false VEYA kendi tarifleri
+    query = query.or(`is_private.is.false,is_private.is.null,added_by.eq.${currentUser.name}`);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+
   if (error) {
-    // Hata varsa cache'den dene
     const cached = localStorage.getItem('tarif_cache');
     if (cached) { recipes = JSON.parse(cached); updateCounts(); updateTagsBar(); renderList(); }
     toast('⚠️ Veriler yüklenemedi');
     return;
   }
-  recipes = data||[];
-  // Cache'e kaydet
+  recipes = data || [];
   localStorage.setItem('tarif_cache', JSON.stringify(recipes));
-  // İlk girişte last_seen yoksa şimdi ayarla
-  if (!localStorage.getItem(LAST_SEEN_KEY)) {
-    markAsSeen();
-  }
+  if (!localStorage.getItem(LAST_SEEN_KEY)) markAsSeen();
   updateCounts(); updateTagsBar(); renderList();
   checkNewRecipes();
 }
