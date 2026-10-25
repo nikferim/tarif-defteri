@@ -6,13 +6,14 @@ on:
   workflow_dispatch:       # Elle de çalıştırılabilir
 
 permissions:
-  actions: write
-  contents: read
+  contents: write
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Ping Supabase
         run: |
           code=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -24,9 +25,18 @@ jobs:
             exit 1
           fi
 
-      # GitHub, 60 gün etkinlik olmayan repolarda zamanlanmış işleri durdurur.
-      # Bu adım workflow'u her çalışmada yeniden etkinleştirip sayacı sıfırlar.
-      - name: Workflow'u aktif tut
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow enable "${{ github.workflow }}" --repo "${{ github.repository }}"
+      # GitHub, 60 gün repo etkinliği olmayan depolarda zamanlanmış işleri durdurur.
+      # Son commit 45 günden eskiyse boş bir commit atılır, sayaç sıfırlanır.
+      - name: Repo etkinliğini canlı tut
+        run: |
+          last=$(git log -1 --format=%ct)
+          now=$(date +%s)
+          days=$(( (now - last) / 86400 ))
+          echo "Son commit: $days gün önce"
+          if [ "$days" -ge 45 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "chore: keepalive"
+            git push
+            echo "Boş commit atıldı"
+          fi
