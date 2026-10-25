@@ -5,28 +5,12 @@ on:
     - cron: "0 6 * * 1,4" # Pazartesi ve Perşembe, 06:00 UTC
   workflow_dispatch:       # Elle de çalıştırılabilir
 
-permissions:
-  actions: write
-  contents: read
-
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Supabase
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://doaeylatedhpnwqqtvpb.supabase.co/rest/v1/members?select=id&limit=1" \
-            -H "apikey: sb_publishable_tRsM1gq-b2Pfa9Rh9uXpoA_G2U1BNFJ")
-          echo "HTTP $code"
-          if [ "$code" -ne 200 ]; then
-            echo "Ping başarısız"
-            exit 1
-          fi
-
-      # GitHub, 60 gün etkinlik olmayan repolarda zamanlanmış işleri durdurur.
-      # Bu adım workflow'u her çalışmada yeniden etkinleştirip sayacı sıfırlar.
-      - name: Workflow'u aktif tut
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow enable "${{ github.workflow }}" --repo "${{ github.repository }}"
+          curl -s "https://doaeylatedhpnwqqtvpb.supabase.co/rest/v1/" \
+            -H "apikey: sb_publishable_tRsM1gq-b2Pfa9Rh9uXpoA_G2U1BNFJ" \
+            -o /dev/null -w "HTTP %{http_code}"
